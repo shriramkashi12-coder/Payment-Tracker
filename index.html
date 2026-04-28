@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#cc4514">
+
   <title>Priest Ledger - Kinetic Dark</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -124,7 +128,7 @@
         📡
       </div>
       
-      <div class="action-circle-btn dark" onclick="document.getElementById('searchInput').focus()">
+      <div class="action-circle-btn dark" onclick="triggerTotalView()" title="Show All-Time">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
     </div>
@@ -290,7 +294,6 @@
 
     function handleTypeChange() { 
       updateCategories(); 
-      updateHeaderBalance();
       refreshView(); 
     }
 
@@ -323,7 +326,6 @@
 
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
       showToast(editingId ? "Entry Updated" : "Saved Successfully");
-      updateHeaderBalance();
       refreshView();
     }
 
@@ -354,29 +356,42 @@
         ledger = ledger.filter(e => e.id !== id);
         localStorage.setItem('priestLedger', JSON.stringify(ledger));
         if (editingId === id) cancelEdit();
-        updateHeaderBalance();
         refreshView();
       }
     }
 
+    // UPDATED LOGIC: Calculates the header balance dynamically based on All-Time vs Monthly View
     function updateHeaderBalance() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       let contextEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
+      
+      // Filter by month if the user is in the monthly view
+      if (currentViewType === 'monthly') {
+        const selectedMonthStr = document.getElementById('monthPicker').value;
+        if (selectedMonthStr) {
+          const [year, month] = selectedMonthStr.split('-');
+          contextEntries = contextEntries.filter(entry => { 
+            const entryDate = new Date(entry.date); 
+            return entryDate.getMonth() + 1 === parseInt(month) && entryDate.getFullYear() === parseInt(year); 
+          });
+        }
+      }
       
       let total = 0;
       contextEntries.forEach(e => { total += e.amount; });
       
       document.getElementById('headerBalance').innerText = total.toLocaleString('en-IN');
       
-      // Update the visual styling of the top header based on the toggle selection
+      // Update text to dynamically reflect "Monthly" vs "Total"
       const balanceLabel = document.getElementById('balanceLabel');
       const balanceText = document.getElementById('headerBalanceText');
+      const viewLabel = currentViewType === 'monthly' ? 'Monthly' : 'Total';
       
       if (activeType === 'income') {
-        balanceLabel.innerText = 'Total Income';
+        balanceLabel.innerText = viewLabel + ' Income';
         balanceText.style.color = 'var(--income)';
       } else {
-        balanceLabel.innerText = 'Total Expense';
+        balanceLabel.innerText = viewLabel + ' Expense';
         balanceText.style.color = 'var(--expense)';
       }
     }
@@ -431,9 +446,22 @@
       resultBox.innerHTML = html;
     }
 
-    function triggerTotalView() { currentViewType = 'all'; showTotal(); }
-    function triggerMonthlyView() { currentViewType = 'monthly'; showMonthly(); }
-    function showTotal() { renderTable(ledger, 'All-Time Report'); }
+    // Trigger functions updated to ensure header balance calculates against the newly set view type
+    function triggerTotalView() { 
+      currentViewType = 'all'; 
+      document.getElementById('searchInput').value = '';
+      refreshView(); 
+    }
+    
+    function triggerMonthlyView() { 
+      currentViewType = 'monthly'; 
+      refreshView(); 
+    }
+    
+    function showTotal() { 
+      renderTable(ledger, 'All-Time Report'); 
+    }
+    
     function showMonthly() {
       const selectedMonthStr = document.getElementById('monthPicker').value;
       if (!selectedMonthStr) return;
@@ -442,7 +470,12 @@
       const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short', year: 'numeric' });
       renderTable(monthlyEntries, `${monthName} Report`);
     }
-    function refreshView() { if (currentViewType === 'all') showTotal(); else if (currentViewType === 'monthly') showMonthly(); }
+    
+    function refreshView() { 
+      updateHeaderBalance(); // Triggers the dynamic balance calculation
+      if (currentViewType === 'all') showTotal(); 
+      else if (currentViewType === 'monthly') showMonthly(); 
+    }
 
     function showToast(msg) {
       const toast = document.createElement('div'); toast.textContent = msg;
