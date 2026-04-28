@@ -59,8 +59,13 @@
 
     .input-row { display: flex; gap: 10px; }
     .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; }
-    .input-group label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .input-group select, .input-group input { background: transparent; border: none; color: white; font-size: 16px; font-weight: 600; width: 100%; appearance: none; }
+    
+    /* Added custom label container for the new cancel button */
+    .label-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .input-group label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin: 0; }
+    
+    .input-group select, .input-group input { background: transparent; border: none; color: white; font-size: 16px; font-weight: 600; width: 100%; appearance: none; padding: 0;}
+    .input-group select option { background: #111; color: white; }
     .input-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     
     .btn-add { width: 100%; background: var(--orange-btn); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; box-shadow: 0 10px 20px rgba(216, 69, 17, 0.3); transition: transform 0.1s; cursor: pointer; }
@@ -145,11 +150,18 @@
 
     <div class="input-row">
       <div class="input-group" style="flex: 1.5;">
-        <label>Category</label>
-        <select id="categorySelect"></select>
+        <div class="label-header">
+          <label>Category</label>
+          <span id="cancelCustomCat" style="display: none; color: var(--expense); font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase;" onclick="cancelCustomInput()">✕ Cancel</span>
+        </div>
+        
+        <select id="categorySelect" onchange="triggerCustomCategory()"></select>
+        
+        <input type="text" id="customCategoryInput" placeholder="Type new category..." style="display: none;">
       </div>
+
       <div class="input-group">
-        <label>Date</label>
+        <div class="label-header"><label>Date</label></div>
         <input type="date" id="txnDate">
       </div>
     </div>
@@ -175,6 +187,9 @@
     const incomeCategories = ["Aparam", "Homam", "Purvam", "Poojai", "Laukikam", "Other Income"];
     const expenseCategories = ["Travel", "Pooja Materials", "Dakshina Given", "Food/Meals", "Other Expense"];
     const categoryIcons = { "Aparam": "🔥", "Homam": "🕉️", "Purvam": "✨", "Poojai": "🙏", "Laukikam": "💼", "Other Income": "💰", "Travel": "🚕", "Pooja Materials": "🌺", "Dakshina Given": "💸", "Food/Meals": "🍛", "Other Expense": "🧾" };
+
+    let customIncomeCategories = JSON.parse(localStorage.getItem('customIncomeCategories')) || [];
+    let customExpenseCategories = JSON.parse(localStorage.getItem('customExpenseCategories')) || [];
 
     let ledger = JSON.parse(localStorage.getItem('priestLedger')) || [];
     let trips = JSON.parse(localStorage.getItem('priestTrips')) || [];
@@ -264,7 +279,7 @@
         const opt = document.createElement('option');
         opt.value = trip.id;
         opt.textContent = `${trip.name}`;
-        select.insertBefore(opt, select.lastElementChild); // Insert before "NEW"
+        select.insertBefore(opt, select.lastElementChild);
       });
       
       select.value = activeTripId === null ? 'GENERAL' : activeTripId;
@@ -293,7 +308,9 @@
     }
 
     function handleTypeChange() { 
+      cancelCustomInput(); // Reset UI if they switch Income/Expense
       updateCategories(); 
+      updateHeaderBalance();
       refreshView(); 
     }
 
@@ -301,42 +318,117 @@
       const type = document.querySelector('input[name="txnType"]:checked').value;
       const select = document.getElementById('categorySelect');
       select.innerHTML = '';
-      const options = type === 'income' ? incomeCategories : expenseCategories;
-      options.forEach(cat => {
-        const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat; select.appendChild(opt);
+      
+      const baseOptions = type === 'income' ? incomeCategories : expenseCategories;
+      const customOptions = type === 'income' ? customIncomeCategories : customExpenseCategories;
+      const allOptions = [...baseOptions, ...customOptions];
+
+      allOptions.forEach(cat => {
+        const opt = document.createElement('option'); 
+        opt.value = cat; 
+        opt.textContent = cat; 
+        select.appendChild(opt);
       });
+
+      const addOpt = document.createElement('option');
+      addOpt.value = "ADD_NEW_CUSTOM_CAT";
+      addOpt.textContent = "➕ Add Custom...";
+      addOpt.style.color = "#ed5e21"; 
+      select.appendChild(addOpt);
     }
 
+    // UI LOGIC: Swaps the dropdown for the text input
+    function triggerCustomCategory() {
+      const select = document.getElementById('categorySelect');
+      const input = document.getElementById('customCategoryInput');
+      const cancelBtn = document.getElementById('cancelCustomCat');
+
+      if (select.value === 'ADD_NEW_CUSTOM_CAT') {
+        select.style.display = 'none';
+        input.style.display = 'block';
+        cancelBtn.style.display = 'block';
+        input.value = ''; // clear out old typing
+        input.focus();    // bring up mobile keyboard
+      }
+    }
+
+    // UI LOGIC: Swaps back to dropdown if user cancels
+    function cancelCustomInput() {
+      const select = document.getElementById('categorySelect');
+      const input = document.getElementById('customCategoryInput');
+      const cancelBtn = document.getElementById('cancelCustomCat');
+
+      input.style.display = 'none';
+      cancelBtn.style.display = 'none';
+      select.style.display = 'block';
+      select.selectedIndex = 0; // Reset to the first valid category so "Add Custom" isn't stuck
+    }
+
+    // CORE LOGIC: Validates typed input and saves it globally
     function saveTransaction() {
-      const type = document.querySelector('input[name="txnType"]:checked').value;
-      const category = document.getElementById('categorySelect').value;
       const amount = parseFloat(document.getElementById('amount').value);
       const date = document.getElementById('txnDate').value;
+      const type = document.querySelector('input[name="txnType"]:checked').value;
+      
+      let finalCategory = '';
+      const customInput = document.getElementById('customCategoryInput');
 
       if (isNaN(amount) || amount <= 0) { showToast("Enter a valid amount"); return; }
 
+      // Determine if we are grabbing from the SELECT or the typed INPUT
+      if (customInput.style.display === 'block') {
+        finalCategory = customInput.value.trim();
+        if (!finalCategory) { showToast("Please type a category name"); return; }
+        
+        // Save to correct global custom array
+        if (type === 'income') {
+          if (!incomeCategories.includes(finalCategory) && !customIncomeCategories.includes(finalCategory)) {
+            customIncomeCategories.push(finalCategory);
+            localStorage.setItem('customIncomeCategories', JSON.stringify(customIncomeCategories));
+          }
+        } else {
+          if (!expenseCategories.includes(finalCategory) && !customExpenseCategories.includes(finalCategory)) {
+            customExpenseCategories.push(finalCategory);
+            localStorage.setItem('customExpenseCategories', JSON.stringify(customExpenseCategories));
+          }
+        }
+      } else {
+        finalCategory = document.getElementById('categorySelect').value;
+        if (finalCategory === 'ADD_NEW_CUSTOM_CAT') { showToast("Please select a valid category"); return; }
+      }
+
+      // Add to Ledger
       if (editingId) {
         const index = ledger.findIndex(e => e.id === editingId);
-        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category, amount, date };
+        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, amount, date };
         cancelEdit(); 
       } else {
-        ledger.push({ id: Date.now(), tripId: activeTripId, type, category, amount, date });
-        document.getElementById('amount').value = ''; 
+        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, amount, date });
       }
 
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
       showToast(editingId ? "Entry Updated" : "Saved Successfully");
+      
+      // Clean up the Form
+      document.getElementById('amount').value = ''; 
+      cancelCustomInput(); // Reset UI back to select box
+      updateCategories();  // Re-render select options so new category appears immediately
+      updateHeaderBalance();
       refreshView();
     }
 
     function editTransaction(id) {
       const entry = ledger.find(e => e.id === id);
       if (!entry) return;
+      
       document.querySelector(`input[name="txnType"][value="${entry.type}"]`).checked = true;
+      cancelCustomInput(); // ensure we are in select mode
       updateCategories();
+      
       document.getElementById('categorySelect').value = entry.category;
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
+      
       editingId = id;
       document.getElementById('submitBtn').textContent = 'Update Transaction';
       document.getElementById('cancelBtn').style.display = 'block';
@@ -349,6 +441,7 @@
       document.getElementById('txnDate').valueAsDate = new Date();
       document.getElementById('submitBtn').textContent = 'Add Transaction';
       document.getElementById('cancelBtn').style.display = 'none';
+      cancelCustomInput(); // Reset custom input UI safely
     }
 
     function deleteTransaction(id) {
@@ -356,16 +449,15 @@
         ledger = ledger.filter(e => e.id !== id);
         localStorage.setItem('priestLedger', JSON.stringify(ledger));
         if (editingId === id) cancelEdit();
+        updateHeaderBalance();
         refreshView();
       }
     }
 
-    // UPDATED LOGIC: Calculates the header balance dynamically based on All-Time vs Monthly View
     function updateHeaderBalance() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       let contextEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
       
-      // Filter by month if the user is in the monthly view
       if (currentViewType === 'monthly') {
         const selectedMonthStr = document.getElementById('monthPicker').value;
         if (selectedMonthStr) {
@@ -382,7 +474,6 @@
       
       document.getElementById('headerBalance').innerText = total.toLocaleString('en-IN');
       
-      // Update text to dynamically reflect "Monthly" vs "Total"
       const balanceLabel = document.getElementById('balanceLabel');
       const balanceText = document.getElementById('headerBalanceText');
       const viewLabel = currentViewType === 'monthly' ? 'Monthly' : 'Total';
@@ -446,22 +537,9 @@
       resultBox.innerHTML = html;
     }
 
-    // Trigger functions updated to ensure header balance calculates against the newly set view type
-    function triggerTotalView() { 
-      currentViewType = 'all'; 
-      document.getElementById('searchInput').value = '';
-      refreshView(); 
-    }
-    
-    function triggerMonthlyView() { 
-      currentViewType = 'monthly'; 
-      refreshView(); 
-    }
-    
-    function showTotal() { 
-      renderTable(ledger, 'All-Time Report'); 
-    }
-    
+    function triggerTotalView() { currentViewType = 'all'; document.getElementById('searchInput').value = ''; refreshView(); }
+    function triggerMonthlyView() { currentViewType = 'monthly'; refreshView(); }
+    function showTotal() { renderTable(ledger, 'All-Time Report'); }
     function showMonthly() {
       const selectedMonthStr = document.getElementById('monthPicker').value;
       if (!selectedMonthStr) return;
@@ -472,7 +550,7 @@
     }
     
     function refreshView() { 
-      updateHeaderBalance(); // Triggers the dynamic balance calculation
+      updateHeaderBalance(); 
       if (currentViewType === 'all') showTotal(); 
       else if (currentViewType === 'monthly') showMonthly(); 
     }
