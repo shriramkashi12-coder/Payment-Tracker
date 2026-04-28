@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
+  <title>Priest Ledger - Kinetic Dark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #000000;
+      --card-top: #0a0a0a;
+      --orange-grad-end: #cc4514;
+      --orange-btn: linear-gradient(90deg, #ed5e21 0%, #d84511 100%);
+      --text-main: #ffffff;
+      --text-dim: #8e8e93;
+      --income: #00D362; 
+      --expense: #FF5A5F;
+      --txn-red: linear-gradient(90deg, #3a1616 0%, #111111 100%);
+      --txn-green: linear-gradient(90deg, #163a20 0%, #111111 100%);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+
+    /* --- TOP HEADER CARD --- */
+    .top-header { background: linear-gradient(180deg, var(--card-top) 50%, var(--orange-grad-end) 100%); border-radius: 0 0 45px 45px; padding: env(safe-area-inset-top, 40px) 20px 30px; position: relative; z-index: 10; box-shadow: 0 10px 40px rgba(204, 69, 20, 0.15); }
+    
+    /* Centered Nav Top */
+    .nav-top { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+    
+    select.folder-select { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px 20px; border-radius: 20px; font-weight: 700; font-size: 15px; appearance: none; text-align: center; cursor: pointer; max-width: 250px; width: 100%;}
+    select.folder-select option { background: #111; color: #fff; }
+
+    .balance-container { text-align: center; margin-bottom: 30px; }
+    .balance-label { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
+    .balance-amount { font-size: 52px; font-weight: 700; letter-spacing: -1.5px; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+
+    /* --- OVERLAPPING ACTION BAR --- */
+    .action-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; margin-bottom: -15px; }
+    .action-circle-btn { width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #000; display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;}
+    .action-circle-btn:active { transform: scale(0.9); }
+    .action-circle-btn.dark { background: rgba(30, 30, 30, 0.8); color: white; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+
+    /* --- INPUT FORM --- */
+    .form-container { padding: 40px 20px 20px; position: relative; z-index: 5; display: flex; flex-direction: column; gap: 15px; }
+    
+    .type-toggle { display: flex; background: #111; border-radius: 16px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+    .type-toggle input[type="radio"] { display: none; }
+    .type-toggle label { flex: 1; text-align: center; padding: 12px; z-index: 1; font-size: 14px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color 0.3s ease; }
+    .toggle-slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px); background: #222; border-radius: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 0; }
+    #typeExpense:checked ~ .toggle-slider { transform: translateX(100%); }
+    #typeIncome:checked ~ .income-label { color: var(--income); }
+    #typeExpense:checked ~ .expense-label { color: var(--expense); }
+
+    .input-row { display: flex; gap: 10px; }
+    .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; }
+    .input-group label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .input-group select, .input-group input { background: transparent; border: none; color: white; font-size: 16px; font-weight: 600; width: 100%; appearance: none; }
+    .input-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    
+    .btn-add { width: 100%; background: var(--orange-btn); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; box-shadow: 0 10px 20px rgba(216, 69, 17, 0.3); transition: transform 0.1s; cursor: pointer; }
+    .btn-add:active { transform: scale(0.97); }
+    .btn-cancel { background: #222; color: #fff; border: 1px solid rgba(255,255,255,0.1); width: 100%; padding: 14px; border-radius: 16px; font-weight: 600; margin-top: 5px; display: none; }
+
+    /* --- TRANSACTIONS LIST --- */
+    .transactions { padding: 10px 20px 40px; }
+    .filter-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .filter-input { background: #111; border: 1px solid rgba(255,255,255,0.05); color: white; padding: 12px 15px; border-radius: 12px; font-size: 14px; flex: 1; }
+    
+    .txn-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: 600; color: var(--text-dim); }
+
+    .txn-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-radius: 20px; margin-bottom: 12px; background: #111; border: 1px solid rgba(255,255,255,0.03); }
+    .txn-row.red-glow { background: var(--txn-red); }
+    .txn-row.green-glow { background: var(--txn-green); }
+
+    .txn-left { display: flex; align-items: center; gap: 16px; }
+    .txn-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; background: rgba(255,255,255,0.1); }
+    .txn-details { display: flex; flex-direction: column; gap: 4px; }
+    .txn-name { font-size: 15px; font-weight: 600; }
+    .txn-time { font-size: 12px; color: var(--text-dim); }
+
+    .txn-right { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .txn-amt { font-size: 15px; font-weight: 600; }
+    .color-red { color: var(--expense); }
+    .color-green { color: var(--income); }
+    .txn-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .action-icon { font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 8px; cursor: pointer; color: white; border: none; }
+
+    /* --- IMPORT MODAL --- */
+    #importOverlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+    .import-card { background: #111; border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+    
+  </style>
+</head>
+<body>
+
+  <div id="importOverlay">
+    <div class="import-card">
+      <h3 style="margin-top:0; font-size:22px; color:white;">📥 Trip Incoming!</h3>
+      <p id="importMessage" style="color:var(--text-dim); line-height:1.5; margin: 15px 0;">A friend has shared a trip with you.</p>
+      <div style="display: flex; gap: 10px; margin-top: 25px;">
+        <button class="btn-cancel" style="display: block; margin: 0; flex: 1;" onclick="cancelImport()">Decline</button>
+        <button class="btn-add" style="flex: 1;" onclick="confirmImport()">Import Data</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-header">
+    <div class="nav-top">
+      <select id="folderSelect" class="folder-select" onchange="handleFolderChange()">
+        <option value="GENERAL">General Ledger</option>
+        <option value="NEW">+ New Trip...</option>
+      </select>
+    </div>
+
+    <div class="balance-container">
+      <div class="balance-label" id="balanceLabel">Total Income</div>
+      <div class="balance-amount" id="headerBalanceText">₹<span id="headerBalance">0</span></div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-circle-btn" onclick="shareCurrentTrip()" id="shareTripBtn" title="Beam Trip">
+        📡
+      </div>
+      
+      <div class="action-circle-btn dark" onclick="document.getElementById('searchInput').focus()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="type-toggle">
+      <input type="radio" id="typeIncome" name="txnType" value="income" checked onchange="handleTypeChange()">
+      <label for="typeIncome" class="income-label">Income</label>
+      <input type="radio" id="typeExpense" name="txnType" value="expense" onchange="handleTypeChange()">
+      <label for="typeExpense" class="expense-label">Expense</label>
+      <div class="toggle-slider"></div>
+    </div>
+
+    <div class="input-row">
+      <div class="input-group" style="flex: 1.5;">
+        <label>Category</label>
+        <select id="categorySelect"></select>
+      </div>
+      <div class="input-group">
+        <label>Date</label>
+        <input type="date" id="txnDate">
+      </div>
+    </div>
+
+    <div class="input-group" style="background: transparent; border: none; padding: 0;">
+      <input type="number" id="amount" placeholder="₹ 0.00" inputmode="numeric" style="background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 18px; font-size: 24px; text-align: center;">
+    </div>
+
+    <button id="submitBtn" class="btn-add" onclick="saveTransaction()">Add Transaction</button>
+    <button id="cancelBtn" class="btn-cancel" onclick="cancelEdit()">Cancel Edit</button>
+  </div>
+
+  <div class="transactions">
+    <div class="filter-row">
+      <input type="search" id="searchInput" class="filter-input" placeholder="Search records..." oninput="refreshView()">
+      <input type="month" id="monthPicker" class="filter-input" style="flex: 0.5;" onchange="triggerMonthlyView()">
+    </div>
+    
+    <div id="displayResult"></div>
+  </div>
+
+  <script>
+    const incomeCategories = ["Aparam", "Homam", "Purvam", "Poojai", "Laukikam", "Other Income"];
+    const expenseCategories = ["Travel", "Pooja Materials", "Dakshina Given", "Food/Meals", "Other Expense"];
+    const categoryIcons = { "Aparam": "🔥", "Homam": "🕉️", "Purvam": "✨", "Poojai": "🙏", "Laukikam": "💼", "Other Income": "💰", "Travel": "🚕", "Pooja Materials": "🌺", "Dakshina Given": "💸", "Food/Meals": "🍛", "Other Expense": "🧾" };
+
+    let ledger = JSON.parse(localStorage.getItem('priestLedger')) || [];
+    let trips = JSON.parse(localStorage.getItem('priestTrips')) || [];
+    let activeTripId = null; 
+    let editingId = null;
+    let currentViewType = 'all'; 
+    let pendingImportData = null;
+
+    document.getElementById('txnDate').valueAsDate = new Date();
+    const now = new Date();
+    document.getElementById('monthPicker').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // --- P2P SERVERLESS DATA BEAM LOGIC ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const incomingData = params.get('beam');
+      
+      if (incomingData) {
+        try {
+          const decoded = decodeURIComponent(atob(incomingData));
+          pendingImportData = JSON.parse(decoded);
+          
+          document.getElementById('importMessage').innerHTML = 
+            `Ready to import trip:<br><strong style="color:white; font-size:18px;">"${pendingImportData.trip.name}"</strong><br><br>Includes ${pendingImportData.entries.length} recorded transactions.`;
+          document.getElementById('importOverlay').style.display = 'flex';
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch(e) {
+          showToast("Failed to read beamed data.");
+        }
+      }
+    });
+
+    function confirmImport() {
+      if (!pendingImportData) return;
+      const newTripId = Date.now();
+      const newTrip = { id: newTripId, name: pendingImportData.trip.name + ' (Imported)' };
+      
+      const mappedEntries = pendingImportData.entries.map(entry => ({
+        ...entry, id: Date.now() + Math.random(), tripId: newTripId
+      }));
+      
+      trips.push(newTrip);
+      ledger = ledger.concat(mappedEntries);
+      
+      localStorage.setItem('priestTrips', JSON.stringify(trips));
+      localStorage.setItem('priestLedger', JSON.stringify(ledger));
+      
+      activeTripId = newTripId;
+      initFolders();
+      document.getElementById('importOverlay').style.display = 'none';
+      showToast("Trip Imported!");
+      triggerTotalView();
+    }
+
+    function cancelImport() {
+      pendingImportData = null;
+      document.getElementById('importOverlay').style.display = 'none';
+    }
+
+    async function shareCurrentTrip() {
+      if (!activeTripId) { showToast("Select a specific trip to beam."); return; }
+      const tripToShare = trips.find(t => t.id === activeTripId);
+      const entriesToShare = ledger.filter(e => e.tripId === activeTripId);
+      
+      if (entriesToShare.length === 0) { showToast("Add some records before sharing!"); return; }
+
+      const payload = { trip: tripToShare, entries: entriesToShare };
+      const encodedPayload = btoa(encodeURIComponent(JSON.stringify(payload)));
+      const shareUrl = `${window.location.origin}${window.location.pathname}?beam=${encodedPayload}`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: `Ledger: ${tripToShare.name}`, text: `Import "${tripToShare.name}"`, url: shareUrl });
+        } catch (err) { console.log('Share cancelled.'); }
+      } else {
+        navigator.clipboard.writeText(shareUrl);
+        showToast("Magic Link copied to clipboard!");
+      }
+    }
+
+    // --- STANDARD APP LOGIC ---
+    function initFolders() {
+      const select = document.getElementById('folderSelect');
+      while (select.options.length > 2) { select.remove(2); }
+      
+      trips.forEach(trip => {
+        const opt = document.createElement('option');
+        opt.value = trip.id;
+        opt.textContent = `${trip.name}`;
+        select.insertBefore(opt, select.lastElementChild); // Insert before "NEW"
+      });
+      
+      select.value = activeTripId === null ? 'GENERAL' : activeTripId;
+      document.getElementById('shareTripBtn').style.opacity = activeTripId ? '1' : '0.5';
+      updateHeaderBalance();
+    }
+
+    function handleFolderChange() {
+      const select = document.getElementById('folderSelect');
+      if (select.value === 'NEW') {
+        const tripName = prompt("Enter a name for the new trip:");
+        if (tripName && tripName.trim() !== '') {
+          const newTrip = { id: Date.now(), name: tripName.trim() };
+          trips.push(newTrip);
+          localStorage.setItem('priestTrips', JSON.stringify(trips));
+          activeTripId = newTrip.id;
+        } else {
+          select.value = activeTripId === null ? 'GENERAL' : activeTripId;
+          return;
+        }
+      } else {
+        activeTripId = select.value === 'GENERAL' ? null : parseInt(select.value);
+      }
+      initFolders();
+      refreshView();
+    }
+
+    function handleTypeChange() { 
+      updateCategories(); 
+      updateHeaderBalance();
+      refreshView(); 
+    }
+
+    function updateCategories() {
+      const type = document.querySelector('input[name="txnType"]:checked').value;
+      const select = document.getElementById('categorySelect');
+      select.innerHTML = '';
+      const options = type === 'income' ? incomeCategories : expenseCategories;
+      options.forEach(cat => {
+        const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat; select.appendChild(opt);
+      });
+    }
+
+    function saveTransaction() {
+      const type = document.querySelector('input[name="txnType"]:checked').value;
+      const category = document.getElementById('categorySelect').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const date = document.getElementById('txnDate').value;
+
+      if (isNaN(amount) || amount <= 0) { showToast("Enter a valid amount"); return; }
+
+      if (editingId) {
+        const index = ledger.findIndex(e => e.id === editingId);
+        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category, amount, date };
+        cancelEdit(); 
+      } else {
+        ledger.push({ id: Date.now(), tripId: activeTripId, type, category, amount, date });
+        document.getElementById('amount').value = ''; 
+      }
+
+      localStorage.setItem('priestLedger', JSON.stringify(ledger));
+      showToast(editingId ? "Entry Updated" : "Saved Successfully");
+      updateHeaderBalance();
+      refreshView();
+    }
+
+    function editTransaction(id) {
+      const entry = ledger.find(e => e.id === id);
+      if (!entry) return;
+      document.querySelector(`input[name="txnType"][value="${entry.type}"]`).checked = true;
+      updateCategories();
+      document.getElementById('categorySelect').value = entry.category;
+      document.getElementById('amount').value = entry.amount;
+      document.getElementById('txnDate').value = entry.date;
+      editingId = id;
+      document.getElementById('submitBtn').textContent = 'Update Transaction';
+      document.getElementById('cancelBtn').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      document.getElementById('amount').value = '';
+      document.getElementById('txnDate').valueAsDate = new Date();
+      document.getElementById('submitBtn').textContent = 'Add Transaction';
+      document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    function deleteTransaction(id) {
+      if (confirm("Delete this entry entirely?")) {
+        ledger = ledger.filter(e => e.id !== id);
+        localStorage.setItem('priestLedger', JSON.stringify(ledger));
+        if (editingId === id) cancelEdit();
+        updateHeaderBalance();
+        refreshView();
+      }
+    }
+
+    function updateHeaderBalance() {
+      const activeType = document.querySelector('input[name="txnType"]:checked').value;
+      let contextEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
+      
+      let total = 0;
+      contextEntries.forEach(e => { total += e.amount; });
+      
+      document.getElementById('headerBalance').innerText = total.toLocaleString('en-IN');
+      
+      // Update the visual styling of the top header based on the toggle selection
+      const balanceLabel = document.getElementById('balanceLabel');
+      const balanceText = document.getElementById('headerBalanceText');
+      
+      if (activeType === 'income') {
+        balanceLabel.innerText = 'Total Income';
+        balanceText.style.color = 'var(--income)';
+      } else {
+        balanceLabel.innerText = 'Total Expense';
+        balanceText.style.color = 'var(--expense)';
+      }
+    }
+
+    function renderTable(entriesToFilter, titleText) {
+      const resultBox = document.getElementById('displayResult');
+      const activeType = document.querySelector('input[name="txnType"]:checked').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      let contextEntries = entriesToFilter.filter(e => e.tripId === activeTripId);
+      let displayEntries = contextEntries.filter(e => e.type === activeType);
+      
+      if (searchTerm) {
+        displayEntries = displayEntries.filter(e => e.category.toLowerCase().includes(searchTerm) || e.amount.toString().includes(searchTerm) || e.date.includes(searchTerm));
+      }
+      
+      let html = `<div class="txn-header"><span>${titleText}</span> <span style="font-size:12px; font-weight:400;">(${displayEntries.length} records)</span></div>`;
+
+      if (displayEntries.length === 0) {
+        html += `<div style="text-align:center; padding:30px 0; color:var(--text-dim);">No matching records found.</div>`;
+      } else {
+        displayEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        displayEntries.forEach(entry => {
+          const isIncome = entry.type === 'income';
+          const rowClass = isIncome ? 'green-glow' : 'red-glow';
+          const amtColor = isIncome ? 'color-green' : 'color-red';
+          const sign = isIncome ? '+' : '-';
+          const dateObj = new Date(entry.date);
+          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const icon = categoryIcons[entry.category] || "🔹";
+
+          html += `
+          <div class="txn-row ${rowClass}">
+            <div class="txn-left">
+              <div class="txn-icon">${icon}</div>
+              <div class="txn-details">
+                <div class="txn-name">${entry.category}</div>
+                <div class="txn-time">${dateStr}</div>
+              </div>
+            </div>
+            <div class="txn-right">
+              <div class="txn-amt ${amtColor}">${sign}₹${entry.amount.toLocaleString('en-IN')}</div>
+              <div class="txn-actions">
+                <button class="action-icon" onclick="editTransaction(${entry.id})">✎</button>
+                <button class="action-icon" onclick="deleteTransaction(${entry.id})">✕</button>
+              </div>
+            </div>
+          </div>`;
+        });
+      }
+      resultBox.innerHTML = html;
+    }
+
+    function triggerTotalView() { currentViewType = 'all'; showTotal(); }
+    function triggerMonthlyView() { currentViewType = 'monthly'; showMonthly(); }
+    function showTotal() { renderTable(ledger, 'All-Time Report'); }
+    function showMonthly() {
+      const selectedMonthStr = document.getElementById('monthPicker').value;
+      if (!selectedMonthStr) return;
+      const [year, month] = selectedMonthStr.split('-');
+      const monthlyEntries = ledger.filter(entry => { const entryDate = new Date(entry.date); return entryDate.getMonth() + 1 === parseInt(month) && entryDate.getFullYear() === parseInt(year); });
+      const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+      renderTable(monthlyEntries, `${monthName} Report`);
+    }
+    function refreshView() { if (currentViewType === 'all') showTotal(); else if (currentViewType === 'monthly') showMonthly(); }
+
+    function showToast(msg) {
+      const toast = document.createElement('div'); toast.textContent = msg;
+      Object.assign(toast.style, { position: 'fixed', bottom: '40px', left: '50%', transform: 'translateX(-50%)', background: 'white', color: 'black', padding: '14px 28px', borderRadius: '100px', zIndex: '1000', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', transition: 'opacity 0.3s', fontSize: '15px', fontWeight: '700' });
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
+    }
+
+    updateCategories(); initFolders(); triggerTotalView();
+  </script>
+</body>
+</html>
