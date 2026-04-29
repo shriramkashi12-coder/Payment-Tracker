@@ -47,7 +47,7 @@
     .action-circle-btn.dark { background: rgba(30, 30, 30, 0.8); color: white; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
 
     /* --- INPUT FORM --- */
-    .form-container { padding: 40px 20px 20px; position: relative; z-index: 5; display: flex; flex-direction: column; gap: 15px; }
+    .form-container { padding: 40px 20px 20px; position: relative; z-index: 5; display: flex; flex-direction: column; gap: 12px; }
     
     .type-toggle { display: flex; background: #111; border-radius: 16px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
     .type-toggle input[type="radio"] { display: none; }
@@ -60,13 +60,15 @@
     .input-row { display: flex; gap: 10px; }
     .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; }
     
-    /* Added custom label container for the new cancel button */
     .label-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .input-group label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin: 0; }
     
     .input-group select, .input-group input { background: transparent; border: none; color: white; font-size: 16px; font-weight: 600; width: 100%; appearance: none; padding: 0;}
     .input-group select option { background: #111; color: white; }
     .input-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+    .details-input { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 14px 15px; font-size: 15px; color: white; width: 100%; font-weight: 500; }
+    .details-input::placeholder { color: rgba(255,255,255,0.3); }
     
     .btn-add { width: 100%; background: var(--orange-btn); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; box-shadow: 0 10px 20px rgba(216, 69, 17, 0.3); transition: transform 0.1s; cursor: pointer; }
     .btn-add:active { transform: scale(0.97); }
@@ -83,13 +85,14 @@
     .txn-row.red-glow { background: var(--txn-red); }
     .txn-row.green-glow { background: var(--txn-green); }
 
-    .txn-left { display: flex; align-items: center; gap: 16px; }
-    .txn-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; background: rgba(255,255,255,0.1); }
-    .txn-details { display: flex; flex-direction: column; gap: 4px; }
-    .txn-name { font-size: 15px; font-weight: 600; }
+    .txn-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; }
+    .txn-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; background: rgba(255,255,255,0.1); }
+    .txn-details { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+    .txn-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .txn-subtext { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.5); margin-left: 4px; }
     .txn-time { font-size: 12px; color: var(--text-dim); }
 
-    .txn-right { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .txn-right { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; margin-left: 10px; }
     .txn-amt { font-size: 15px; font-weight: 600; }
     .color-red { color: var(--expense); }
     .color-green { color: var(--income); }
@@ -155,8 +158,7 @@
           <span id="cancelCustomCat" style="display: none; color: var(--expense); font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase;" onclick="cancelCustomInput()">✕ Cancel</span>
         </div>
         
-        <select id="categorySelect" onchange="triggerCustomCategory()"></select>
-        
+        <select id="categorySelect" onchange="triggerCustomCategory();"></select>
         <input type="text" id="customCategoryInput" placeholder="Type new category..." style="display: none;">
       </div>
 
@@ -165,6 +167,8 @@
         <input type="date" id="txnDate">
       </div>
     </div>
+
+    <input type="text" id="detailsInput" class="details-input" placeholder="Add details or notes (optional)...">
 
     <div class="input-group" style="background: transparent; border: none; padding: 0;">
       <input type="number" id="amount" placeholder="₹ 0.00" inputmode="numeric" style="background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 18px; font-size: 24px; text-align: center;">
@@ -308,7 +312,7 @@
     }
 
     function handleTypeChange() { 
-      cancelCustomInput(); // Reset UI if they switch Income/Expense
+      cancelCustomInput(); 
       updateCategories(); 
       updateHeaderBalance();
       refreshView(); 
@@ -347,8 +351,8 @@
         select.style.display = 'none';
         input.style.display = 'block';
         cancelBtn.style.display = 'block';
-        input.value = ''; // clear out old typing
-        input.focus();    // bring up mobile keyboard
+        input.value = ''; 
+        input.focus();    
       }
     }
 
@@ -361,7 +365,7 @@
       input.style.display = 'none';
       cancelBtn.style.display = 'none';
       select.style.display = 'block';
-      select.selectedIndex = 0; // Reset to the first valid category so "Add Custom" isn't stuck
+      select.selectedIndex = 0; 
     }
 
     // CORE LOGIC: Validates typed input and saves it globally
@@ -372,6 +376,9 @@
       
       let finalCategory = '';
       const customInput = document.getElementById('customCategoryInput');
+
+      // Grab the universal details text
+      const detailsText = document.getElementById('detailsInput').value.trim();
 
       if (isNaN(amount) || amount <= 0) { showToast("Enter a valid amount"); return; }
 
@@ -397,13 +404,13 @@
         if (finalCategory === 'ADD_NEW_CUSTOM_CAT') { showToast("Please select a valid category"); return; }
       }
 
-      // Add to Ledger
+      // Add to Ledger (Including Details)
       if (editingId) {
         const index = ledger.findIndex(e => e.id === editingId);
-        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, amount, date };
+        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date };
         cancelEdit(); 
       } else {
-        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, amount, date });
+        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date });
       }
 
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
@@ -411,8 +418,9 @@
       
       // Clean up the Form
       document.getElementById('amount').value = ''; 
-      cancelCustomInput(); // Reset UI back to select box
-      updateCategories();  // Re-render select options so new category appears immediately
+      document.getElementById('detailsInput').value = ''; // Clear notes box
+      cancelCustomInput(); 
+      updateCategories();  
       updateHeaderBalance();
       refreshView();
     }
@@ -422,13 +430,16 @@
       if (!entry) return;
       
       document.querySelector(`input[name="txnType"][value="${entry.type}"]`).checked = true;
-      cancelCustomInput(); // ensure we are in select mode
+      cancelCustomInput(); 
       updateCategories();
       
       document.getElementById('categorySelect').value = entry.category;
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
       
+      // Populate details field for editing
+      document.getElementById('detailsInput').value = entry.details || '';
+
       editingId = id;
       document.getElementById('submitBtn').textContent = 'Update Transaction';
       document.getElementById('cancelBtn').style.display = 'block';
@@ -438,10 +449,11 @@
     function cancelEdit() {
       editingId = null;
       document.getElementById('amount').value = '';
+      document.getElementById('detailsInput').value = ''; // Clear notes box
       document.getElementById('txnDate').valueAsDate = new Date();
       document.getElementById('submitBtn').textContent = 'Add Transaction';
       document.getElementById('cancelBtn').style.display = 'none';
-      cancelCustomInput(); // Reset custom input UI safely
+      cancelCustomInput(); 
     }
 
     function deleteTransaction(id) {
@@ -496,7 +508,12 @@
       let displayEntries = contextEntries.filter(e => e.type === activeType);
       
       if (searchTerm) {
-        displayEntries = displayEntries.filter(e => e.category.toLowerCase().includes(searchTerm) || e.amount.toString().includes(searchTerm) || e.date.includes(searchTerm));
+        displayEntries = displayEntries.filter(e => 
+          e.category.toLowerCase().includes(searchTerm) || 
+          (e.details && e.details.toLowerCase().includes(searchTerm)) || 
+          e.amount.toString().includes(searchTerm) || 
+          e.date.includes(searchTerm)
+        );
       }
       
       let html = `<div class="txn-header"><span>${titleText}</span> <span style="font-size:12px; font-weight:400;">(${displayEntries.length} records)</span></div>`;
@@ -514,13 +531,16 @@
           const dateObj = new Date(entry.date);
           const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const icon = categoryIcons[entry.category] || "🔹";
+          
+          // Format the display so the note is subtle and next to the category
+          const detailsHtml = entry.details ? `<span class="txn-subtext">• ${entry.details}</span>` : '';
 
           html += `
           <div class="txn-row ${rowClass}">
             <div class="txn-left">
               <div class="txn-icon">${icon}</div>
               <div class="txn-details">
-                <div class="txn-name">${entry.category}</div>
+                <div class="txn-name" title="${entry.category} ${entry.details || ''}">${entry.category}${detailsHtml}</div>
                 <div class="txn-time">${dateStr}</div>
               </div>
             </div>
