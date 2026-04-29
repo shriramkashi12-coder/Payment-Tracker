@@ -41,7 +41,7 @@
     .balance-amount { font-size: 52px; font-weight: 700; letter-spacing: -1.5px; font-variant-numeric: tabular-nums; transition: color 0.3s; }
 
     /* --- OVERLAPPING ACTION BAR --- */
-    .action-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; margin-bottom: -15px; }
+    .action-bar { display: flex; justify-content: center; gap: 15px; align-items: center; padding: 0 10px; margin-bottom: -15px; }
     .action-circle-btn { width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #000; display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;}
     .action-circle-btn:active { transform: scale(0.9); }
     .action-circle-btn.dark { background: rgba(30, 30, 30, 0.8); color: white; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
@@ -85,7 +85,7 @@
     .txn-row.red-glow { background: var(--txn-red); }
     .txn-row.green-glow { background: var(--txn-green); }
 
-    .txn-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; }
+    .txn-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; cursor: pointer; }
     .txn-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; background: rgba(255,255,255,0.1); }
     .txn-details { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
     .txn-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -99,22 +99,39 @@
     .txn-actions { display: flex; gap: 8px; margin-top: 4px; }
     .action-icon { font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 8px; cursor: pointer; color: white; border: none; }
 
-    /* --- IMPORT MODAL --- */
-    #importOverlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-    .import-card { background: #111; border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+    /* --- OVERLAYS / MODALS --- */
+    .overlay-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+    .modal-card { background: #111; border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
     
   </style>
 </head>
 <body>
 
-  <div id="importOverlay">
-    <div class="import-card">
+  <div id="importOverlay" class="overlay-backdrop">
+    <div class="modal-card" style="text-align: center;">
       <h3 style="margin-top:0; font-size:22px; color:white;">📥 Trip Incoming!</h3>
       <p id="importMessage" style="color:var(--text-dim); line-height:1.5; margin: 15px 0;">A friend has shared a trip with you.</p>
       <div style="display: flex; gap: 10px; margin-top: 25px;">
         <button class="btn-cancel" style="display: block; margin: 0; flex: 1;" onclick="cancelImport()">Decline</button>
         <button class="btn-add" style="flex: 1;" onclick="confirmImport()">Import Data</button>
       </div>
+    </div>
+  </div>
+
+  <div id="detailsOverlay" class="overlay-backdrop">
+    <div class="modal-card" style="text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+        <h3 id="modalCategory" style="margin:0; font-size:22px; color:white;">Category</h3>
+        <span id="modalAmount" style="font-size: 20px; font-weight: 700;">₹0</span>
+      </div>
+      <div style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;" id="modalDate">Date</div>
+      
+      <label style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Notes & Details</label>
+      <div style="background: #222; padding: 15px; border-radius: 12px; color: white; font-size: 15px; line-height: 1.5; word-wrap: break-word; margin-top: 5px; border: 1px solid rgba(255,255,255,0.05);" id="modalNotes">
+        No notes provided.
+      </div>
+      
+      <button class="btn-cancel" style="display: block; width: 100%; margin-top: 25px;" onclick="closeDetailsModal()">Close Details</button>
     </div>
   </div>
 
@@ -132,12 +149,16 @@
     </div>
 
     <div class="action-bar">
+      <div class="action-circle-btn dark" onclick="triggerTotalView()" title="Show All-Time">
+        📜
+      </div>
+      
       <div class="action-circle-btn" onclick="shareCurrentTrip()" id="shareTripBtn" title="Beam Trip">
         📡
       </div>
-      
-      <div class="action-circle-btn dark" onclick="triggerTotalView()" title="Show All-Time">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+
+      <div class="action-circle-btn dark" onclick="copyToWhatsApp()" title="Copy to WhatsApp">
+        📋
       </div>
     </div>
   </div>
@@ -341,7 +362,6 @@
       select.appendChild(addOpt);
     }
 
-    // UI LOGIC: Swaps the dropdown for the text input
     function triggerCustomCategory() {
       const select = document.getElementById('categorySelect');
       const input = document.getElementById('customCategoryInput');
@@ -356,7 +376,6 @@
       }
     }
 
-    // UI LOGIC: Swaps back to dropdown if user cancels
     function cancelCustomInput() {
       const select = document.getElementById('categorySelect');
       const input = document.getElementById('customCategoryInput');
@@ -368,7 +387,6 @@
       select.selectedIndex = 0; 
     }
 
-    // CORE LOGIC: Validates typed input and saves it globally
     function saveTransaction() {
       const amount = parseFloat(document.getElementById('amount').value);
       const date = document.getElementById('txnDate').value;
@@ -376,18 +394,14 @@
       
       let finalCategory = '';
       const customInput = document.getElementById('customCategoryInput');
-
-      // Grab the universal details text
       const detailsText = document.getElementById('detailsInput').value.trim();
 
       if (isNaN(amount) || amount <= 0) { showToast("Enter a valid amount"); return; }
 
-      // Determine if we are grabbing from the SELECT or the typed INPUT
       if (customInput.style.display === 'block') {
         finalCategory = customInput.value.trim();
         if (!finalCategory) { showToast("Please type a category name"); return; }
         
-        // Save to correct global custom array
         if (type === 'income') {
           if (!incomeCategories.includes(finalCategory) && !customIncomeCategories.includes(finalCategory)) {
             customIncomeCategories.push(finalCategory);
@@ -404,7 +418,6 @@
         if (finalCategory === 'ADD_NEW_CUSTOM_CAT') { showToast("Please select a valid category"); return; }
       }
 
-      // Add to Ledger (Including Details)
       if (editingId) {
         const index = ledger.findIndex(e => e.id === editingId);
         if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date };
@@ -416,9 +429,8 @@
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
       showToast(editingId ? "Entry Updated" : "Saved Successfully");
       
-      // Clean up the Form
       document.getElementById('amount').value = ''; 
-      document.getElementById('detailsInput').value = ''; // Clear notes box
+      document.getElementById('detailsInput').value = ''; 
       cancelCustomInput(); 
       updateCategories();  
       updateHeaderBalance();
@@ -436,8 +448,6 @@
       document.getElementById('categorySelect').value = entry.category;
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
-      
-      // Populate details field for editing
       document.getElementById('detailsInput').value = entry.details || '';
 
       editingId = id;
@@ -449,7 +459,7 @@
     function cancelEdit() {
       editingId = null;
       document.getElementById('amount').value = '';
-      document.getElementById('detailsInput').value = ''; // Clear notes box
+      document.getElementById('detailsInput').value = ''; 
       document.getElementById('txnDate').valueAsDate = new Date();
       document.getElementById('submitBtn').textContent = 'Add Transaction';
       document.getElementById('cancelBtn').style.display = 'none';
@@ -463,6 +473,101 @@
         if (editingId === id) cancelEdit();
         updateHeaderBalance();
         refreshView();
+      }
+    }
+
+    // --- FULL DETAILS MODAL LOGIC ---
+    function showDetailsModal(id) {
+      const entry = ledger.find(e => e.id === id);
+      if (!entry) return;
+      
+      const isIncome = entry.type === 'income';
+      document.getElementById('modalCategory').innerText = entry.category;
+      
+      const amtElem = document.getElementById('modalAmount');
+      amtElem.innerText = `${isIncome ? '+' : '-'}₹${entry.amount.toLocaleString('en-IN')}`;
+      amtElem.className = isIncome ? 'color-green' : 'color-red';
+      
+      document.getElementById('modalDate').innerText = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      const notesElem = document.getElementById('modalNotes');
+      if (entry.details) {
+        notesElem.innerText = entry.details;
+        notesElem.style.color = "white";
+        notesElem.style.fontStyle = "normal";
+      } else {
+        notesElem.innerText = "No additional notes provided.";
+        notesElem.style.color = "var(--text-dim)";
+        notesElem.style.fontStyle = "italic";
+      }
+      
+      document.getElementById('detailsOverlay').style.display = 'flex';
+    }
+
+    function closeDetailsModal() {
+      document.getElementById('detailsOverlay').style.display = 'none';
+    }
+
+    // --- COPY TO WHATSAPP LOGIC ---
+    function copyToWhatsApp() {
+      const activeType = document.querySelector('input[name="txnType"]:checked').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      // Determine what entries are currently visible on the screen based on filters
+      let displayEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
+      
+      if (searchTerm) {
+        displayEntries = displayEntries.filter(e => 
+          e.category.toLowerCase().includes(searchTerm) || 
+          (e.details && e.details.toLowerCase().includes(searchTerm)) || 
+          e.amount.toString().includes(searchTerm) || 
+          e.date.includes(searchTerm)
+        );
+      }
+      
+      if (currentViewType === 'monthly') {
+        const selectedMonthStr = document.getElementById('monthPicker').value;
+        if (selectedMonthStr) {
+          const [year, month] = selectedMonthStr.split('-');
+          displayEntries = displayEntries.filter(entry => { 
+            const entryDate = new Date(entry.date); 
+            return entryDate.getMonth() + 1 === parseInt(month) && entryDate.getFullYear() === parseInt(year); 
+          });
+        }
+      }
+      
+      if (displayEntries.length === 0) {
+        showToast("No records to copy!");
+        return;
+      }
+
+      displayEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      const tripName = activeTripId ? trips.find(t => t.id === activeTripId).name : "General Ledger";
+      const viewLabel = currentViewType === 'monthly' ? new Date(document.getElementById('monthPicker').value).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "All-Time";
+      const typeLabel = activeType === 'income' ? '🟢 *INCOME*' : '🔴 *EXPENSE*';
+      
+      let total = 0;
+      let textToCopy = `*Ledger:* ${tripName}\n*Period:* ${viewLabel}\n${typeLabel}\n\n`;
+      
+      displayEntries.forEach(e => {
+        total += e.amount;
+        const dateStr = new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const noteStr = e.details ? `\n   ↳ _${e.details}_` : '';
+        textToCopy += `• ${dateStr} | *${e.category}* | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
+      });
+      
+      textToCopy += `\n*TOTAL: ₹${total.toLocaleString('en-IN')}*`;
+      
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showToast("Copied nicely for WhatsApp!");
+        }).catch(err => {
+          showToast("Failed to copy.");
+        });
+      } else {
+        // Fallback for older mobile browsers
+        showToast("Clipboard not supported on this browser.");
       }
     }
 
@@ -532,15 +637,14 @@
           const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const icon = categoryIcons[entry.category] || "🔹";
           
-          // Format the display so the note is subtle and next to the category
           const detailsHtml = entry.details ? `<span class="txn-subtext">• ${entry.details}</span>` : '';
 
           html += `
           <div class="txn-row ${rowClass}">
-            <div class="txn-left">
+            <div class="txn-left" onclick="showDetailsModal(${entry.id})" title="Click to view full details">
               <div class="txn-icon">${icon}</div>
               <div class="txn-details">
-                <div class="txn-name" title="${entry.category} ${entry.details || ''}">${entry.category}${detailsHtml}</div>
+                <div class="txn-name">${entry.category}${detailsHtml}</div>
                 <div class="txn-time">${dateStr}</div>
               </div>
             </div>
@@ -557,9 +661,25 @@
       resultBox.innerHTML = html;
     }
 
-    function triggerTotalView() { currentViewType = 'all'; document.getElementById('searchInput').value = ''; refreshView(); }
-    function triggerMonthlyView() { currentViewType = 'monthly'; refreshView(); }
+    function triggerTotalView() { 
+      currentViewType = 'all'; 
+      document.getElementById('searchInput').value = ''; 
+      document.getElementById('monthPicker').value = ''; 
+      refreshView(); 
+    }
+
+    function triggerMonthlyView() { 
+      const selectedMonthStr = document.getElementById('monthPicker').value;
+      if (!selectedMonthStr) {
+        currentViewType = 'all'; 
+      } else {
+        currentViewType = 'monthly'; 
+      }
+      refreshView(); 
+    }
+
     function showTotal() { renderTable(ledger, 'All-Time Report'); }
+
     function showMonthly() {
       const selectedMonthStr = document.getElementById('monthPicker').value;
       if (!selectedMonthStr) return;
