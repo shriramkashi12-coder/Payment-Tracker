@@ -76,8 +76,9 @@
 
     /* --- TRANSACTIONS LIST --- */
     .transactions { padding: 10px 20px 40px; }
-    .filter-row { display: flex; gap: 10px; margin-bottom: 20px; }
-    .filter-input { background: #111; border: 1px solid rgba(255,255,255,0.05); color: white; padding: 12px 15px; border-radius: 12px; font-size: 14px; flex: 1; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .filter-input { background: #111; border: 1px solid rgba(255,255,255,0.05); color: white; padding: 12px 10px; border-radius: 12px; font-size: 13px; appearance: none; }
+    .filter-input option { background: #111; color: white; }
     
     .txn-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: 600; color: var(--text-dim); }
 
@@ -189,7 +190,16 @@
       </div>
     </div>
 
-    <input type="text" id="detailsInput" class="details-input" placeholder="Add details or notes (optional)...">
+    <div class="input-row">
+      <div class="input-group" style="flex: 0.8;">
+        <div class="label-header"><label>Mode</label></div>
+        <select id="paymentModeSelect">
+          <option value="Cash">Cash</option>
+          <option value="GPay">GPay</option>
+        </select>
+      </div>
+      <input type="text" id="detailsInput" class="details-input" placeholder="Add details or notes (optional)..." style="flex: 1.5;">
+    </div>
 
     <div class="input-group" style="background: transparent; border: none; padding: 0;">
       <input type="number" id="amount" placeholder="₹ 0.00" inputmode="numeric" style="background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 18px; font-size: 24px; text-align: center;">
@@ -201,8 +211,18 @@
 
   <div class="transactions">
     <div class="filter-row">
-      <input type="search" id="searchInput" class="filter-input" placeholder="Search records..." oninput="refreshView()">
-      <input type="month" id="monthPicker" class="filter-input" style="flex: 0.5;" onchange="triggerMonthlyView()">
+      <input type="search" id="searchInput" class="filter-input" style="flex: 1;" placeholder="Search records..." oninput="refreshView()">
+    </div>
+    <div class="filter-row" style="margin-bottom: 20px;">
+      <select id="filterCategory" class="filter-input" style="flex: 1.2;" onchange="refreshView()">
+        <option value="ALL">All Categories</option>
+      </select>
+      <select id="filterMode" class="filter-input" style="flex: 1;" onchange="refreshView()">
+        <option value="ALL">All Modes</option>
+        <option value="Cash">Cash</option>
+        <option value="GPay">GPay</option>
+      </select>
+      <input type="month" id="monthPicker" class="filter-input" style="flex: 1.2;" onchange="triggerMonthlyView()">
     </div>
     
     <div id="displayResult"></div>
@@ -216,7 +236,14 @@
     let customIncomeCategories = JSON.parse(localStorage.getItem('customIncomeCategories')) || [];
     let customExpenseCategories = JSON.parse(localStorage.getItem('customExpenseCategories')) || [];
 
-    let ledger = JSON.parse(localStorage.getItem('priestLedger')) || [];
+    // Migrate old data to include "Cash" as default payment mode
+    let rawLedger = JSON.parse(localStorage.getItem('priestLedger')) || [];
+    let ledger = rawLedger.map(entry => {
+      if (!entry.paymentMode) entry.paymentMode = 'Cash';
+      return entry;
+    });
+    localStorage.setItem('priestLedger', JSON.stringify(ledger)); // Save migration
+
     let trips = JSON.parse(localStorage.getItem('priestTrips')) || [];
     let activeTripId = null; 
     let editingId = null;
@@ -253,7 +280,7 @@
       const newTrip = { id: newTripId, name: pendingImportData.trip.name + ' (Imported)' };
       
       const mappedEntries = pendingImportData.entries.map(entry => ({
-        ...entry, id: Date.now() + Math.random(), tripId: newTripId
+        ...entry, id: Date.now() + Math.random(), tripId: newTripId, paymentMode: entry.paymentMode || 'Cash'
       }));
       
       trips.push(newTrip);
@@ -335,6 +362,8 @@
     function handleTypeChange() { 
       cancelCustomInput(); 
       updateCategories(); 
+      document.getElementById('filterCategory').value = 'ALL'; 
+      document.getElementById('filterMode').value = 'ALL';
       updateHeaderBalance();
       refreshView(); 
     }
@@ -342,17 +371,27 @@
     function updateCategories() {
       const type = document.querySelector('input[name="txnType"]:checked').value;
       const select = document.getElementById('categorySelect');
+      const filterSelect = document.getElementById('filterCategory');
+      
       select.innerHTML = '';
+      filterSelect.innerHTML = '<option value="ALL">All Categories</option>';
       
       const baseOptions = type === 'income' ? incomeCategories : expenseCategories;
       const customOptions = type === 'income' ? customIncomeCategories : customExpenseCategories;
       const allOptions = [...baseOptions, ...customOptions];
 
       allOptions.forEach(cat => {
+        // Form dropdown
         const opt = document.createElement('option'); 
         opt.value = cat; 
         opt.textContent = cat; 
         select.appendChild(opt);
+
+        // Filter dropdown
+        const filterOpt = document.createElement('option');
+        filterOpt.value = cat;
+        filterOpt.textContent = cat;
+        filterSelect.appendChild(filterOpt);
       });
 
       const addOpt = document.createElement('option');
@@ -391,6 +430,7 @@
       const amount = parseFloat(document.getElementById('amount').value);
       const date = document.getElementById('txnDate').value;
       const type = document.querySelector('input[name="txnType"]:checked').value;
+      const paymentMode = document.getElementById('paymentModeSelect').value;
       
       let finalCategory = '';
       const customInput = document.getElementById('customCategoryInput');
@@ -420,10 +460,10 @@
 
       if (editingId) {
         const index = ledger.findIndex(e => e.id === editingId);
-        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date };
+        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date, paymentMode };
         cancelEdit(); 
       } else {
-        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date });
+        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date, paymentMode });
       }
 
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
@@ -431,6 +471,7 @@
       
       document.getElementById('amount').value = ''; 
       document.getElementById('detailsInput').value = ''; 
+      document.getElementById('paymentModeSelect').value = 'Cash'; // Reset to default
       cancelCustomInput(); 
       updateCategories();  
       updateHeaderBalance();
@@ -449,6 +490,7 @@
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
       document.getElementById('detailsInput').value = entry.details || '';
+      document.getElementById('paymentModeSelect').value = entry.paymentMode || 'Cash';
 
       editingId = id;
       document.getElementById('submitBtn').textContent = 'Update Transaction';
@@ -461,6 +503,7 @@
       document.getElementById('amount').value = '';
       document.getElementById('detailsInput').value = ''; 
       document.getElementById('txnDate').valueAsDate = new Date();
+      document.getElementById('paymentModeSelect').value = 'Cash';
       document.getElementById('submitBtn').textContent = 'Add Transaction';
       document.getElementById('cancelBtn').style.display = 'none';
       cancelCustomInput(); 
@@ -488,7 +531,8 @@
       amtElem.innerText = `${isIncome ? '+' : '-'}₹${entry.amount.toLocaleString('en-IN')}`;
       amtElem.className = isIncome ? 'color-green' : 'color-red';
       
-      document.getElementById('modalDate').innerText = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const dateStr = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('modalDate').innerHTML = `${dateStr} &bull; <strong style="color:white;">${entry.paymentMode || 'Cash'}</strong>`;
       
       const notesElem = document.getElementById('modalNotes');
       if (entry.details) {
@@ -512,15 +556,25 @@
     function copyToWhatsApp() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filterCat = document.getElementById('filterCategory').value;
+      const filterMode = document.getElementById('filterMode').value;
       
-      // Determine what entries are currently visible on the screen based on filters
       let displayEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
       
+      if (filterCat !== 'ALL') {
+        displayEntries = displayEntries.filter(e => e.category === filterCat);
+      }
+
+      if (filterMode !== 'ALL') {
+        displayEntries = displayEntries.filter(e => e.paymentMode === filterMode);
+      }
+
       if (searchTerm) {
         displayEntries = displayEntries.filter(e => 
           e.category.toLowerCase().includes(searchTerm) || 
           (e.details && e.details.toLowerCase().includes(searchTerm)) || 
           e.amount.toString().includes(searchTerm) || 
+          (e.paymentMode && e.paymentMode.toLowerCase().includes(searchTerm)) ||
           e.date.includes(searchTerm)
         );
       }
@@ -554,7 +608,8 @@
         total += e.amount;
         const dateStr = new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const noteStr = e.details ? `\n   ↳ _${e.details}_` : '';
-        textToCopy += `• ${dateStr} | *${e.category}* | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
+        const modeStr = e.paymentMode ? ` (${e.paymentMode})` : '';
+        textToCopy += `• ${dateStr} | *${e.category}*${modeStr} | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
       });
       
       textToCopy += `\n*TOTAL: ₹${total.toLocaleString('en-IN')}*`;
@@ -566,7 +621,6 @@
           showToast("Failed to copy.");
         });
       } else {
-        // Fallback for older mobile browsers
         showToast("Clipboard not supported on this browser.");
       }
     }
@@ -608,20 +662,47 @@
       const resultBox = document.getElementById('displayResult');
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filterCat = document.getElementById('filterCategory').value;
+      const filterMode = document.getElementById('filterMode').value;
       
       let contextEntries = entriesToFilter.filter(e => e.tripId === activeTripId);
       let displayEntries = contextEntries.filter(e => e.type === activeType);
       
+      // Apply Category Dropdown Filter
+      if (filterCat !== 'ALL') {
+        displayEntries = displayEntries.filter(e => e.category === filterCat);
+      }
+
+      // Apply Mode Dropdown Filter
+      if (filterMode !== 'ALL') {
+        displayEntries = displayEntries.filter(e => e.paymentMode === filterMode);
+      }
+
+      // Apply Text Search Filter
       if (searchTerm) {
         displayEntries = displayEntries.filter(e => 
           e.category.toLowerCase().includes(searchTerm) || 
           (e.details && e.details.toLowerCase().includes(searchTerm)) || 
           e.amount.toString().includes(searchTerm) || 
+          (e.paymentMode && e.paymentMode.toLowerCase().includes(searchTerm)) ||
           e.date.includes(searchTerm)
         );
       }
+
+      // Calculate the Dynamic Total
+      let dynamicTotal = 0;
+      displayEntries.forEach(e => dynamicTotal += e.amount);
+      const totalColor = activeType === 'income' ? 'var(--income)' : 'var(--expense)';
       
-      let html = `<div class="txn-header"><span>${titleText}</span> <span style="font-size:12px; font-weight:400;">(${displayEntries.length} records)</span></div>`;
+      let html = `
+      <div class="txn-header" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <div>
+          <span>${titleText}</span> <span style="font-size:12px; font-weight:400; color:var(--text-dim);">(${displayEntries.length})</span>
+        </div>
+        <div style="color:${totalColor}; font-weight:700; font-size: 15px;">
+          Sum: ₹${dynamicTotal.toLocaleString('en-IN')}
+        </div>
+      </div>`;
 
       if (displayEntries.length === 0) {
         html += `<div style="text-align:center; padding:30px 0; color:var(--text-dim);">No matching records found.</div>`;
@@ -664,6 +745,8 @@
     function triggerTotalView() { 
       currentViewType = 'all'; 
       document.getElementById('searchInput').value = ''; 
+      document.getElementById('filterCategory').value = 'ALL';
+      document.getElementById('filterMode').value = 'ALL';
       document.getElementById('monthPicker').value = ''; 
       refreshView(); 
     }
