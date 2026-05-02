@@ -20,8 +20,10 @@
       --text-dim: #8e8e93;
       --income: #00D362; 
       --expense: #FF5A5F;
+      --pending: #FFB340;
       --txn-red: linear-gradient(90deg, #3a1616 0%, #111111 100%);
       --txn-green: linear-gradient(90deg, #163a20 0%, #111111 100%);
+      --txn-yellow: linear-gradient(90deg, #3a2e16 0%, #111111 100%);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
@@ -38,6 +40,9 @@
     .balance-container { text-align: center; margin-bottom: 30px; }
     .balance-label { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
     .balance-amount { font-size: 52px; font-weight: 700; letter-spacing: -1.5px; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+    
+    .pending-badge { display: inline-block; margin-top: 10px; background: rgba(255, 179, 64, 0.1); border: 1px solid rgba(255, 179, 64, 0.3); color: var(--pending); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
+    .pending-badge:active { transform: scale(0.95); }
 
     .action-bar { display: flex; justify-content: center; gap: 15px; align-items: center; padding: 0 10px; margin-bottom: -15px; }
     .action-circle-btn { width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #000; display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;}
@@ -49,11 +54,16 @@
     
     .type-toggle { display: flex; background: #111; border-radius: 16px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
     .type-toggle input[type="radio"] { display: none; }
-    .type-toggle label { flex: 1; text-align: center; padding: 12px; z-index: 1; font-size: 14px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color 0.3s ease; }
-    .toggle-slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px); background: #222; border-radius: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 0; }
+    .type-toggle label { flex: 1; text-align: center; padding: 12px; z-index: 1; font-size: 13px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color 0.3s ease; }
+    .toggle-slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(33.33% - 4px); background: #222; border-radius: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 0; }
+    
+    #typeIncome:checked ~ .toggle-slider { transform: translateX(0); }
     #typeExpense:checked ~ .toggle-slider { transform: translateX(100%); }
+    #typePending:checked ~ .toggle-slider { transform: translateX(200%); }
+    
     #typeIncome:checked ~ #lblIncome { color: var(--income); }
     #typeExpense:checked ~ #lblExpense { color: var(--expense); }
+    #typePending:checked ~ #lblPending { color: var(--pending); }
 
     .input-row { display: flex; gap: 10px; }
     .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; }
@@ -83,6 +93,7 @@
     .txn-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-radius: 20px; margin-bottom: 12px; background: #111; border: 1px solid rgba(255,255,255,0.03); }
     .txn-row.red-glow { background: var(--txn-red); }
     .txn-row.green-glow { background: var(--txn-green); }
+    .txn-row.yellow-glow { background: var(--txn-yellow); }
 
     .txn-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; cursor: pointer; }
     .txn-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; background: rgba(255,255,255,0.1); }
@@ -95,8 +106,10 @@
     .txn-amt { font-size: 15px; font-weight: 600; }
     .color-red { color: var(--expense); }
     .color-green { color: var(--income); }
+    .color-yellow { color: var(--pending); }
     .txn-actions { display: flex; gap: 8px; margin-top: 4px; }
     .action-icon { font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 8px; cursor: pointer; color: white; border: none; }
+    .action-btn-text { font-size: 11px; background: rgba(255,179,64,0.1); color: var(--pending); border: 1px solid rgba(255,179,64,0.3); padding: 4px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
     /* --- OVERLAYS / MODALS --- */
     .overlay-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
@@ -134,13 +147,15 @@
     <div class="balance-container">
       <div class="balance-label" id="balanceLabel">Total Income</div>
       <div class="balance-amount" id="headerBalanceText">₹<span id="headerBalance">0</span></div>
+      <div id="pendingBadge" class="pending-badge" onclick="document.getElementById('typePending').click()">
+        <span id="txtPendingDuesBadge">⏳ Pending Dues:</span> ₹<span id="globalPending">0</span>
+      </div>
     </div>
 
     <div class="action-bar">
       <div class="action-circle-btn dark" onclick="triggerTotalView()" title="Show All-Time">📜</div>
       <div class="action-circle-btn" onclick="shareCurrentTrip()" id="shareTripBtn" title="Beam Trip">📡</div>
       <div class="action-circle-btn dark" onclick="copyToWhatsApp()" title="Copy to WhatsApp">📋</div>
-      <!-- Language Toggle Button -->
       <div class="action-circle-btn dark" onclick="toggleLanguage()" title="Switch Language" style="color:#ed5e21;">அ/A</div>
     </div>
   </div>
@@ -149,8 +164,13 @@
     <div class="type-toggle">
       <input type="radio" id="typeIncome" name="txnType" value="income" checked onchange="handleTypeChange()">
       <label for="typeIncome" id="lblIncome">Income</label>
+      
       <input type="radio" id="typeExpense" name="txnType" value="expense" onchange="handleTypeChange()">
       <label for="typeExpense" id="lblExpense">Expense</label>
+
+      <input type="radio" id="typePending" name="txnType" value="pending" onchange="handleTypeChange()">
+      <label for="typePending" id="lblPending">Pending</label>
+      
       <div class="toggle-slider"></div>
     </div>
 
@@ -213,22 +233,26 @@
     // --- LANGUAGE DICTIONARY ---
     const dict = {
       en: {
-        lblIncome: "Income", lblExpense: "Expense", lblCategory: "Category", lblDate: "Date", lblMode: "Mode",
+        lblIncome: "Income", lblExpense: "Expense", lblPending: "Pending",
+        lblCategory: "Category", lblDate: "Date", lblMode: "Mode",
         optGenLedger: "General Ledger", optNewTrip: "+ New Trip...", optAllCat: "All Categories", optAllModes: "All Modes",
         placeholderDetails: "Add details or notes (optional)...", placeholderSearch: "Search notes/mode...",
         btnAdd: "Add Transaction", btnUpdate: "Update Transaction", btnCancel: "Cancel Edit",
         lblModalNotesTitle: "Notes & Details", btnCloseModal: "Close Details", txtNoNotes: "No additional notes provided.",
         txtNoRecords: "No matching records found.", txtSum: "Sum", txtCopied: "Copied nicely for WhatsApp!",
-        txtAllTime: "All-Time Report", txtReport: "Report", txtTotal: "Total", txtMonthly: "Monthly"
+        txtAllTime: "All-Time Report", txtReport: "Report", txtTotal: "Total", txtMonthly: "Monthly",
+        txtPendingDuesBadge: "⏳ Pending Dues:", btnMarkPaid: "Mark Paid", txtMarkedPaid: "Marked as Paid!", txtMovedToIncome: "(Original Date: "
       },
       ta: {
-        lblIncome: "வருமானம்", lblExpense: "செலவு", lblCategory: "வகை", lblDate: "தேதி", lblMode: "முறை",
+        lblIncome: "வருமானம்", lblExpense: "செலவு", lblPending: "நிலுவை",
+        lblCategory: "வகை", lblDate: "தேதி", lblMode: "முறை",
         optGenLedger: "பொது கணக்கு", optNewTrip: "+ புதிய கணக்கு...", optAllCat: "அனைத்து வகைகள்", optAllModes: "அனைத்து முறைகள்",
         placeholderDetails: "விவரங்கள்/குறிப்புகள் (விரும்பினால்)...", placeholderSearch: "தேடுக...",
         btnAdd: "பரிவர்த்தனை சேர்", btnUpdate: "புதுப்பி", btnCancel: "ரத்து செய்",
         lblModalNotesTitle: "விவரங்கள்", btnCloseModal: "மூடு", txtNoNotes: "குறிப்புகள் எதுவும் இல்லை.",
         txtNoRecords: "பதிவுகள் எதுவும் இல்லை.", txtSum: "மொத்தம்", txtCopied: "வாட்ஸ்அப்பிற்கு நகலெடுக்கப்பட்டது!",
-        txtAllTime: "முழு அறிக்கை", txtReport: "அறிக்கை", txtTotal: "மொத்த", txtMonthly: "மாத"
+        txtAllTime: "முழு அறிக்கை", txtReport: "அறிக்கை", txtTotal: "மொத்த", txtMonthly: "மாத",
+        txtPendingDuesBadge: "⏳ நிலுவைத் தொகை:", btnMarkPaid: "பெறப்பட்டது", txtMarkedPaid: "பணம் பெறப்பட்டது!", txtMovedToIncome: "(பழைய தேதி: "
       }
     };
 
@@ -251,12 +275,14 @@
     function applyLanguageUI() {
       document.getElementById('lblIncome').innerText = getT('lblIncome');
       document.getElementById('lblExpense').innerText = getT('lblExpense');
+      document.getElementById('lblPending').innerText = getT('lblPending');
       document.getElementById('lblCategory').innerText = getT('lblCategory');
       document.getElementById('lblDate').innerText = getT('lblDate');
       document.getElementById('lblMode').innerText = getT('lblMode');
       document.getElementById('optGenLedger').innerText = getT('optGenLedger');
       document.getElementById('optNewTrip').innerText = getT('optNewTrip');
       document.getElementById('optAllModes').innerText = getT('optAllModes');
+      document.getElementById('txtPendingDuesBadge').innerText = getT('txtPendingDuesBadge');
       
       document.getElementById('detailsInput').placeholder = getT('placeholderDetails');
       document.getElementById('searchInput').placeholder = getT('placeholderSearch');
@@ -267,7 +293,6 @@
       document.getElementById('lblModalNotesTitle').innerText = getT('lblModalNotesTitle');
       document.getElementById('btnCloseModal').innerText = getT('btnCloseModal');
 
-      // The Category options (and the "All Categories" filter text) get updated inside this function
       updateCategories();
       updateHeaderBalance();
       refreshView();
@@ -333,6 +358,17 @@
       updateCategories(); 
       document.getElementById('filterCategory').value = 'ALL'; 
       document.getElementById('filterMode').value = 'ALL';
+      
+      const type = document.querySelector('input[name="txnType"]:checked').value;
+      const submitBtn = document.getElementById('submitBtn');
+      if(type === 'pending' && !editingId) {
+        submitBtn.style.background = 'var(--pending)';
+        submitBtn.style.color = '#000';
+      } else if (!editingId) {
+        submitBtn.style.background = 'var(--orange-btn)';
+        submitBtn.style.color = 'white';
+      }
+      
       updateHeaderBalance();
       refreshView(); 
     }
@@ -345,8 +381,9 @@
       select.innerHTML = '';
       filterSelect.innerHTML = `<option value="ALL">${getT('optAllCat')}</option>`;
       
-      const baseOptions = type === 'income' ? incomeCategories : expenseCategories;
-      const customOptions = type === 'income' ? customIncomeCategories : customExpenseCategories;
+      // If "Pending" is selected, we show Income categories because pending money is usually expected income.
+      const baseOptions = type === 'expense' ? expenseCategories : incomeCategories;
+      const customOptions = type === 'expense' ? customExpenseCategories : customIncomeCategories;
       const allOptions = [...baseOptions, ...customOptions];
 
       allOptions.forEach(cat => {
@@ -398,7 +435,7 @@
       if (customInput.style.display === 'block') {
         finalCategory = customInput.value.trim();
         if (!finalCategory) { showToast("Please type a category name"); return; }
-        if (type === 'income') {
+        if (type !== 'expense') {
           if (!incomeCategories.includes(finalCategory) && !customIncomeCategories.includes(finalCategory)) {
             customIncomeCategories.push(finalCategory); localStorage.setItem('customIncomeCategories', JSON.stringify(customIncomeCategories));
           }
@@ -432,14 +469,19 @@
       const entry = ledger.find(e => e.id === id);
       if (!entry) return;
       document.querySelector(`input[name="txnType"][value="${entry.type}"]`).checked = true;
-      cancelCustomInput(); updateCategories();
+      handleTypeChange(); // Triggers UI updates
+      
       document.getElementById('categorySelect').value = entry.category;
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
       document.getElementById('detailsInput').value = entry.details || '';
       document.getElementById('paymentModeSelect').value = entry.paymentMode || 'Cash';
       editingId = id;
-      document.getElementById('submitBtn').textContent = getT('btnUpdate');
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = getT('btnUpdate');
+      submitBtn.style.background = 'var(--orange-btn)';
+      submitBtn.style.color = 'white';
       document.getElementById('cancelBtn').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -448,7 +490,11 @@
       editingId = null;
       document.getElementById('amount').value = ''; document.getElementById('detailsInput').value = ''; 
       document.getElementById('txnDate').valueAsDate = new Date(); document.getElementById('paymentModeSelect').value = 'Cash';
-      document.getElementById('submitBtn').textContent = getT('btnAdd');
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = getT('btnAdd');
+      handleTypeChange(); // Resets color based on toggle
+      
       document.getElementById('cancelBtn').style.display = 'none';
       cancelCustomInput(); 
     }
@@ -460,13 +506,47 @@
       }
     }
 
+    // --- NEW PENDING TO INCOME LOGIC ---
+    function markAsPaid(id) {
+      const entry = ledger.find(e => e.id === id);
+      if (!entry) return;
+      
+      // Get today's local date properly formatted for input type="date"
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      
+      const oldDateObj = new Date(entry.date);
+      const oldDateStr = oldDateObj.toLocaleDateString(lang==='ta'?'ta-IN':'en-US', { month: 'short', day: 'numeric' });
+      
+      entry.type = 'income';
+      entry.date = todayStr;
+      
+      // Append history to notes
+      const historyNote = `${getT('txtMovedToIncome')}${oldDateStr})`;
+      entry.details = entry.details ? `${entry.details} ${historyNote}` : historyNote;
+      
+      localStorage.setItem('priestLedger', JSON.stringify(ledger));
+      showToast(getT('txtMarkedPaid'));
+      
+      // Auto-switch view to income so they see the result immediately
+      document.getElementById('typeIncome').click();
+    }
+
     function showDetailsModal(id) {
       const entry = ledger.find(e => e.id === id); if (!entry) return;
       const isIncome = entry.type === 'income';
+      const isPending = entry.type === 'pending';
+      
       document.getElementById('modalCategory').innerText = getCatT(entry.category);
       const amtElem = document.getElementById('modalAmount');
-      amtElem.innerText = `${isIncome ? '+' : '-'}₹${entry.amount.toLocaleString('en-IN')}`;
-      amtElem.className = isIncome ? 'color-green' : 'color-red';
+      amtElem.innerText = `${isIncome ? '+' : (isPending ? '⏳' : '-')}₹${entry.amount.toLocaleString('en-IN')}`;
+      
+      if(isPending) amtElem.className = 'color-yellow';
+      else amtElem.className = isIncome ? 'color-green' : 'color-red';
+      
       const dateStr = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       document.getElementById('modalDate').innerHTML = `${dateStr} &bull; <strong style="color:white;">${entry.paymentMode || 'Cash'}</strong>`;
       const notesElem = document.getElementById('modalNotes');
@@ -498,7 +578,11 @@
       
       const tripName = activeTripId ? trips.find(t => t.id === activeTripId).name : getT('optGenLedger');
       const viewLabel = currentViewType === 'monthly' ? new Date(document.getElementById('monthPicker').value).toLocaleDateString(lang==='ta'?'ta-IN':'en-US', { month: 'long', year: 'numeric' }) : getT('txtAllTime');
-      const typeLabel = activeType === 'income' ? `🟢 *${getT('lblIncome').toUpperCase()}*` : `🔴 *${getT('lblExpense').toUpperCase()}*`;
+      
+      let typeLabel = '';
+      if(activeType === 'income') typeLabel = `🟢 *${getT('lblIncome').toUpperCase()}*`;
+      else if (activeType === 'expense') typeLabel = `🔴 *${getT('lblExpense').toUpperCase()}*`;
+      else typeLabel = `🟡 *${getT('lblPending').toUpperCase()}*`;
       
       let total = 0; let textToCopy = `*Ledger:* ${tripName}\n*Period:* ${viewLabel}\n${typeLabel}\n\n`;
       displayEntries.forEach(e => {
@@ -516,11 +600,22 @@
 
     function updateHeaderBalance() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
+      
+      // Calculate Global Pending for the Badge
+      let globalPendingTotal = 0;
+      ledger.filter(e => e.tripId === activeTripId && e.type === 'pending').forEach(e => globalPendingTotal += e.amount);
+      document.getElementById('globalPending').innerText = globalPendingTotal.toLocaleString('en-IN');
+      
+      // Show or hide the badge (hide it when on pending view since the big number is already pending)
+      document.getElementById('pendingBadge').style.display = (activeType === 'pending') ? 'none' : 'inline-block';
+
+      // Calculate context entries for the big number
       let contextEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
       if (currentViewType === 'monthly') {
         const selMonth = document.getElementById('monthPicker').value;
         if (selMonth) { const [y, m] = selMonth.split('-'); contextEntries = contextEntries.filter(e => { const d = new Date(e.date); return d.getMonth() + 1 === parseInt(m) && d.getFullYear() === parseInt(y); }); }
       }
+      
       let total = 0; contextEntries.forEach(e => total += e.amount);
       document.getElementById('headerBalance').innerText = total.toLocaleString('en-IN');
       
@@ -530,8 +625,10 @@
       
       if (activeType === 'income') {
         balanceLabel.innerText = `${viewStr} ${getT('lblIncome')}`; balanceText.style.color = 'var(--income)';
-      } else {
+      } else if (activeType === 'expense') {
         balanceLabel.innerText = `${viewStr} ${getT('lblExpense')}`; balanceText.style.color = 'var(--expense)';
+      } else {
+        balanceLabel.innerText = `${viewStr} ${getT('lblPending')}`; balanceText.style.color = 'var(--pending)';
       }
     }
 
@@ -551,7 +648,10 @@
       }
 
       let dynamicTotal = 0; displayEntries.forEach(e => dynamicTotal += e.amount);
-      const totalColor = activeType === 'income' ? 'var(--income)' : 'var(--expense)';
+      
+      let totalColor = 'var(--income)';
+      if(activeType === 'expense') totalColor = 'var(--expense)';
+      if(activeType === 'pending') totalColor = 'var(--pending)';
       
       let html = `
       <div class="txn-header" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
@@ -564,12 +664,23 @@
       } else {
         displayEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
         displayEntries.forEach(entry => {
-          const isInc = entry.type === 'income'; const rowClass = isInc ? 'green-glow' : 'red-glow';
-          const amtColor = isInc ? 'color-green' : 'color-red'; const sign = isInc ? '+' : '-';
+          const isInc = entry.type === 'income';
+          const isPending = entry.type === 'pending';
+          
+          let rowClass = 'red-glow'; let amtColor = 'color-red'; let sign = '-';
+          if(isInc) { rowClass = 'green-glow'; amtColor = 'color-green'; sign = '+'; }
+          if(isPending) { rowClass = 'yellow-glow'; amtColor = 'color-yellow'; sign = '⏳'; }
+          
           const dateStr = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const icon = categoryIcons[entry.category] || "🔹";
           const detailsHtml = entry.details ? `<span class="txn-subtext">• ${entry.details}</span>` : '';
           
+          let actionButtons = '';
+          if(isPending) {
+             actionButtons += `<button class="action-btn-text" onclick="markAsPaid(${entry.id})">💰 ${getT('btnMarkPaid')}</button>`;
+          }
+          actionButtons += `<button class="action-icon" onclick="editTransaction(${entry.id})">✎</button><button class="action-icon" onclick="deleteTransaction(${entry.id})">✕</button>`;
+
           html += `
           <div class="txn-row ${rowClass}">
             <div class="txn-left" onclick="showDetailsModal(${entry.id})" title="View Details">
@@ -581,7 +692,7 @@
             </div>
             <div class="txn-right">
               <div class="txn-amt ${amtColor}">${sign}₹${entry.amount.toLocaleString('en-IN')}</div>
-              <div class="txn-actions"><button class="action-icon" onclick="editTransaction(${entry.id})">✎</button><button class="action-icon" onclick="deleteTransaction(${entry.id})">✕</button></div>
+              <div class="txn-actions" style="align-items:center;">${actionButtons}</div>
             </div>
           </div>`;
         });
