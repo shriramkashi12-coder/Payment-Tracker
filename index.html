@@ -30,7 +30,6 @@
     /* --- TOP HEADER CARD --- */
     .top-header { background: linear-gradient(180deg, var(--card-top) 50%, var(--orange-grad-end) 100%); border-radius: 0 0 45px 45px; padding: env(safe-area-inset-top, 40px) 20px 30px; position: relative; z-index: 10; box-shadow: 0 10px 40px rgba(204, 69, 20, 0.15); }
     
-    /* Centered Nav Top */
     .nav-top { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
     
     select.folder-select { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px 20px; border-radius: 20px; font-weight: 700; font-size: 15px; appearance: none; text-align: center; cursor: pointer; max-width: 250px; width: 100%;}
@@ -40,11 +39,10 @@
     .balance-label { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
     .balance-amount { font-size: 52px; font-weight: 700; letter-spacing: -1.5px; font-variant-numeric: tabular-nums; transition: color 0.3s; }
 
-    /* --- OVERLAPPING ACTION BAR --- */
     .action-bar { display: flex; justify-content: center; gap: 15px; align-items: center; padding: 0 10px; margin-bottom: -15px; }
     .action-circle-btn { width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #000; display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;}
     .action-circle-btn:active { transform: scale(0.9); }
-    .action-circle-btn.dark { background: rgba(30, 30, 30, 0.8); color: white; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    .action-circle-btn.dark { background: rgba(30, 30, 30, 0.8); color: white; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); font-weight: 800; font-size: 16px; }
 
     /* --- INPUT FORM --- */
     .form-container { padding: 40px 20px 20px; position: relative; z-index: 5; display: flex; flex-direction: column; gap: 12px; }
@@ -54,8 +52,8 @@
     .type-toggle label { flex: 1; text-align: center; padding: 12px; z-index: 1; font-size: 14px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color 0.3s ease; }
     .toggle-slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px); background: #222; border-radius: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 0; }
     #typeExpense:checked ~ .toggle-slider { transform: translateX(100%); }
-    #typeIncome:checked ~ .income-label { color: var(--income); }
-    #typeExpense:checked ~ .expense-label { color: var(--expense); }
+    #typeIncome:checked ~ #lblIncome { color: var(--income); }
+    #typeExpense:checked ~ #lblExpense { color: var(--expense); }
 
     .input-row { display: flex; gap: 10px; }
     .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; }
@@ -108,17 +106,6 @@
 </head>
 <body>
 
-  <div id="importOverlay" class="overlay-backdrop">
-    <div class="modal-card" style="text-align: center;">
-      <h3 style="margin-top:0; font-size:22px; color:white;">📥 Trip Incoming!</h3>
-      <p id="importMessage" style="color:var(--text-dim); line-height:1.5; margin: 15px 0;">A friend has shared a trip with you.</p>
-      <div style="display: flex; gap: 10px; margin-top: 25px;">
-        <button class="btn-cancel" style="display: block; margin: 0; flex: 1;" onclick="cancelImport()">Decline</button>
-        <button class="btn-add" style="flex: 1;" onclick="confirmImport()">Import Data</button>
-      </div>
-    </div>
-  </div>
-
   <div id="detailsOverlay" class="overlay-backdrop">
     <div class="modal-card" style="text-align: left;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
@@ -127,20 +114,20 @@
       </div>
       <div style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;" id="modalDate">Date</div>
       
-      <label style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Notes & Details</label>
+      <label id="lblModalNotesTitle" style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Notes & Details</label>
       <div style="background: #222; padding: 15px; border-radius: 12px; color: white; font-size: 15px; line-height: 1.5; word-wrap: break-word; margin-top: 5px; border: 1px solid rgba(255,255,255,0.05);" id="modalNotes">
         No notes provided.
       </div>
       
-      <button class="btn-cancel" style="display: block; width: 100%; margin-top: 25px;" onclick="closeDetailsModal()">Close Details</button>
+      <button class="btn-cancel" id="btnCloseModal" style="display: block; width: 100%; margin-top: 25px;" onclick="closeDetailsModal()">Close Details</button>
     </div>
   </div>
 
   <div class="top-header">
     <div class="nav-top">
       <select id="folderSelect" class="folder-select" onchange="handleFolderChange()">
-        <option value="GENERAL">General Ledger</option>
-        <option value="NEW">+ New Trip...</option>
+        <option value="GENERAL" id="optGenLedger">General Ledger</option>
+        <option value="NEW" id="optNewTrip">+ New Trip...</option>
       </select>
     </div>
 
@@ -150,33 +137,27 @@
     </div>
 
     <div class="action-bar">
-      <div class="action-circle-btn dark" onclick="triggerTotalView()" title="Show All-Time">
-        📜
-      </div>
-      
-      <div class="action-circle-btn" onclick="shareCurrentTrip()" id="shareTripBtn" title="Beam Trip">
-        📡
-      </div>
-
-      <div class="action-circle-btn dark" onclick="copyToWhatsApp()" title="Copy to WhatsApp">
-        📋
-      </div>
+      <div class="action-circle-btn dark" onclick="triggerTotalView()" title="Show All-Time">📜</div>
+      <div class="action-circle-btn" onclick="shareCurrentTrip()" id="shareTripBtn" title="Beam Trip">📡</div>
+      <div class="action-circle-btn dark" onclick="copyToWhatsApp()" title="Copy to WhatsApp">📋</div>
+      <!-- Language Toggle Button -->
+      <div class="action-circle-btn dark" onclick="toggleLanguage()" title="Switch Language" style="color:#ed5e21;">அ/A</div>
     </div>
   </div>
 
   <div class="form-container">
     <div class="type-toggle">
       <input type="radio" id="typeIncome" name="txnType" value="income" checked onchange="handleTypeChange()">
-      <label for="typeIncome" class="income-label">Income</label>
+      <label for="typeIncome" id="lblIncome">Income</label>
       <input type="radio" id="typeExpense" name="txnType" value="expense" onchange="handleTypeChange()">
-      <label for="typeExpense" class="expense-label">Expense</label>
+      <label for="typeExpense" id="lblExpense">Expense</label>
       <div class="toggle-slider"></div>
     </div>
 
     <div class="input-row">
       <div class="input-group" style="flex: 1.5;">
         <div class="label-header">
-          <label>Category</label>
+          <label id="lblCategory">Category</label>
           <span id="cancelCustomCat" style="display: none; color: var(--expense); font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase;" onclick="cancelCustomInput()">✕ Cancel</span>
         </div>
         
@@ -185,14 +166,14 @@
       </div>
 
       <div class="input-group">
-        <div class="label-header"><label>Date</label></div>
+        <div class="label-header"><label id="lblDate">Date</label></div>
         <input type="date" id="txnDate">
       </div>
     </div>
 
     <div class="input-row">
       <div class="input-group" style="flex: 0.8;">
-        <div class="label-header"><label>Mode</label></div>
+        <div class="label-header"><label id="lblMode">Mode</label></div>
         <select id="paymentModeSelect">
           <option value="Cash">Cash</option>
           <option value="GPay">GPay</option>
@@ -211,14 +192,14 @@
 
   <div class="transactions">
     <div class="filter-row">
-      <input type="search" id="searchInput" class="filter-input" style="flex: 1;" placeholder="Search records..." oninput="refreshView()">
+      <input type="search" id="searchInput" class="filter-input" style="flex: 1;" placeholder="Search notes/mode..." oninput="refreshView()">
     </div>
     <div class="filter-row" style="margin-bottom: 20px;">
       <select id="filterCategory" class="filter-input" style="flex: 1.2;" onchange="refreshView()">
-        <option value="ALL">All Categories</option>
+        <option value="ALL" id="optAllCat">All Categories</option>
       </select>
       <select id="filterMode" class="filter-input" style="flex: 1;" onchange="refreshView()">
-        <option value="ALL">All Modes</option>
+        <option value="ALL" id="optAllModes">All Modes</option>
         <option value="Cash">Cash</option>
         <option value="GPay">GPay</option>
       </select>
@@ -229,6 +210,70 @@
   </div>
 
   <script>
+    // --- LANGUAGE DICTIONARY ---
+    const dict = {
+      en: {
+        lblIncome: "Income", lblExpense: "Expense", lblCategory: "Category", lblDate: "Date", lblMode: "Mode",
+        optGenLedger: "General Ledger", optNewTrip: "+ New Trip...", optAllCat: "All Categories", optAllModes: "All Modes",
+        placeholderDetails: "Add details or notes (optional)...", placeholderSearch: "Search notes/mode...",
+        btnAdd: "Add Transaction", btnUpdate: "Update Transaction", btnCancel: "Cancel Edit",
+        lblModalNotesTitle: "Notes & Details", btnCloseModal: "Close Details", txtNoNotes: "No additional notes provided.",
+        txtNoRecords: "No matching records found.", txtSum: "Sum", txtCopied: "Copied nicely for WhatsApp!",
+        txtAllTime: "All-Time Report", txtReport: "Report", txtTotal: "Total", txtMonthly: "Monthly"
+      },
+      ta: {
+        lblIncome: "வருமானம்", lblExpense: "செலவு", lblCategory: "வகை", lblDate: "தேதி", lblMode: "முறை",
+        optGenLedger: "பொது கணக்கு", optNewTrip: "+ புதிய கணக்கு...", optAllCat: "அனைத்து வகைகள்", optAllModes: "அனைத்து முறைகள்",
+        placeholderDetails: "விவரங்கள்/குறிப்புகள் (விரும்பினால்)...", placeholderSearch: "தேடுக...",
+        btnAdd: "பரிவர்த்தனை சேர்", btnUpdate: "புதுப்பி", btnCancel: "ரத்து செய்",
+        lblModalNotesTitle: "விவரங்கள்", btnCloseModal: "மூடு", txtNoNotes: "குறிப்புகள் எதுவும் இல்லை.",
+        txtNoRecords: "பதிவுகள் எதுவும் இல்லை.", txtSum: "மொத்தம்", txtCopied: "வாட்ஸ்அப்பிற்கு நகலெடுக்கப்பட்டது!",
+        txtAllTime: "முழு அறிக்கை", txtReport: "அறிக்கை", txtTotal: "மொத்த", txtMonthly: "மாத"
+      }
+    };
+
+    const catTranslate = {
+      "Poojai": "பூஜை", "Homam": "ஹோமம்", "Purvam": "பூர்வம்", "Aparam": "அபரம்", "Laukikam": "லௌகீகம்", "Other Income": "மற்ற வருமானம்",
+      "Travel": "பயணம்", "Pooja Materials": "பூஜை பொருட்கள்", "Dakshina Given": "தட்சணை", "Food/Meals": "உணவு", "Other Expense": "மற்ற செலவு"
+    };
+
+    let lang = localStorage.getItem('priestLang') || 'en';
+
+    function getT(key) { return dict[lang][key]; }
+    function getCatT(catName) { return (lang === 'ta' && catTranslate[catName]) ? catTranslate[catName] : catName; }
+
+    function toggleLanguage() {
+      lang = (lang === 'en') ? 'ta' : 'en';
+      localStorage.setItem('priestLang', lang);
+      applyLanguageUI();
+    }
+
+    function applyLanguageUI() {
+      document.getElementById('lblIncome').innerText = getT('lblIncome');
+      document.getElementById('lblExpense').innerText = getT('lblExpense');
+      document.getElementById('lblCategory').innerText = getT('lblCategory');
+      document.getElementById('lblDate').innerText = getT('lblDate');
+      document.getElementById('lblMode').innerText = getT('lblMode');
+      document.getElementById('optGenLedger').innerText = getT('optGenLedger');
+      document.getElementById('optNewTrip').innerText = getT('optNewTrip');
+      document.getElementById('optAllModes').innerText = getT('optAllModes');
+      
+      document.getElementById('detailsInput').placeholder = getT('placeholderDetails');
+      document.getElementById('searchInput').placeholder = getT('placeholderSearch');
+      
+      document.getElementById('submitBtn').innerText = editingId ? getT('btnUpdate') : getT('btnAdd');
+      document.getElementById('cancelBtn').innerText = getT('btnCancel');
+      
+      document.getElementById('lblModalNotesTitle').innerText = getT('lblModalNotesTitle');
+      document.getElementById('btnCloseModal').innerText = getT('btnCloseModal');
+
+      // The Category options (and the "All Categories" filter text) get updated inside this function
+      updateCategories();
+      updateHeaderBalance();
+      refreshView();
+    }
+
+    // --- STANDARD APP LOGIC ---
     const incomeCategories = ["Poojai", "Homam", "Purvam", "Aparam", "Laukikam", "Other Income"];
     const expenseCategories = ["Travel", "Pooja Materials", "Dakshina Given", "Food/Meals", "Other Expense"];
     const categoryIcons = { "Aparam": "🔥", "Homam": "🕉️", "Purvam": "✨", "Poojai": "🙏", "Laukikam": "💼", "Other Income": "💰", "Travel": "🚕", "Pooja Materials": "🌺", "Dakshina Given": "💸", "Food/Meals": "🍛", "Other Expense": "🧾" };
@@ -236,104 +281,28 @@
     let customIncomeCategories = JSON.parse(localStorage.getItem('customIncomeCategories')) || [];
     let customExpenseCategories = JSON.parse(localStorage.getItem('customExpenseCategories')) || [];
 
-    // Migrate old data to include "Cash" as default payment mode
     let rawLedger = JSON.parse(localStorage.getItem('priestLedger')) || [];
-    let ledger = rawLedger.map(entry => {
-      if (!entry.paymentMode) entry.paymentMode = 'Cash';
-      return entry;
-    });
-    localStorage.setItem('priestLedger', JSON.stringify(ledger)); // Save migration
+    let ledger = rawLedger.map(entry => { if (!entry.paymentMode) entry.paymentMode = 'Cash'; return entry; });
+    localStorage.setItem('priestLedger', JSON.stringify(ledger)); 
 
     let trips = JSON.parse(localStorage.getItem('priestTrips')) || [];
     let activeTripId = null; 
     let editingId = null;
     let currentViewType = 'all'; 
-    let pendingImportData = null;
 
     document.getElementById('txnDate').valueAsDate = new Date();
     const now = new Date();
     document.getElementById('monthPicker').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    // --- P2P SERVERLESS DATA BEAM LOGIC ---
-    window.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(window.location.search);
-      const incomingData = params.get('beam');
-      
-      if (incomingData) {
-        try {
-          const decoded = decodeURIComponent(atob(incomingData));
-          pendingImportData = JSON.parse(decoded);
-          
-          document.getElementById('importMessage').innerHTML = 
-            `Ready to import trip:<br><strong style="color:white; font-size:18px;">"${pendingImportData.trip.name}"</strong><br><br>Includes ${pendingImportData.entries.length} recorded transactions.`;
-          document.getElementById('importOverlay').style.display = 'flex';
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } catch(e) {
-          showToast("Failed to read beamed data.");
-        }
-      }
-    });
-
-    function confirmImport() {
-      if (!pendingImportData) return;
-      const newTripId = Date.now();
-      const newTrip = { id: newTripId, name: pendingImportData.trip.name + ' (Imported)' };
-      
-      const mappedEntries = pendingImportData.entries.map(entry => ({
-        ...entry, id: Date.now() + Math.random(), tripId: newTripId, paymentMode: entry.paymentMode || 'Cash'
-      }));
-      
-      trips.push(newTrip);
-      ledger = ledger.concat(mappedEntries);
-      
-      localStorage.setItem('priestTrips', JSON.stringify(trips));
-      localStorage.setItem('priestLedger', JSON.stringify(ledger));
-      
-      activeTripId = newTripId;
-      initFolders();
-      document.getElementById('importOverlay').style.display = 'none';
-      showToast("Trip Imported!");
-      triggerTotalView();
-    }
-
-    function cancelImport() {
-      pendingImportData = null;
-      document.getElementById('importOverlay').style.display = 'none';
-    }
-
-    async function shareCurrentTrip() {
-      if (!activeTripId) { showToast("Select a specific trip to beam."); return; }
-      const tripToShare = trips.find(t => t.id === activeTripId);
-      const entriesToShare = ledger.filter(e => e.tripId === activeTripId);
-      
-      if (entriesToShare.length === 0) { showToast("Add some records before sharing!"); return; }
-
-      const payload = { trip: tripToShare, entries: entriesToShare };
-      const encodedPayload = btoa(encodeURIComponent(JSON.stringify(payload)));
-      const shareUrl = `${window.location.origin}${window.location.pathname}?beam=${encodedPayload}`;
-      
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: `Ledger: ${tripToShare.name}`, text: `Import "${tripToShare.name}"`, url: shareUrl });
-        } catch (err) { console.log('Share cancelled.'); }
-      } else {
-        navigator.clipboard.writeText(shareUrl);
-        showToast("Magic Link copied to clipboard!");
-      }
-    }
-
-    // --- STANDARD APP LOGIC ---
     function initFolders() {
       const select = document.getElementById('folderSelect');
       while (select.options.length > 2) { select.remove(2); }
-      
       trips.forEach(trip => {
         const opt = document.createElement('option');
         opt.value = trip.id;
         opt.textContent = `${trip.name}`;
         select.insertBefore(opt, select.lastElementChild);
       });
-      
       select.value = activeTripId === null ? 'GENERAL' : activeTripId;
       document.getElementById('shareTripBtn').style.opacity = activeTripId ? '1' : '0.5';
       updateHeaderBalance();
@@ -374,29 +343,25 @@
       const filterSelect = document.getElementById('filterCategory');
       
       select.innerHTML = '';
-      filterSelect.innerHTML = '<option value="ALL">All Categories</option>';
+      filterSelect.innerHTML = `<option value="ALL">${getT('optAllCat')}</option>`;
       
       const baseOptions = type === 'income' ? incomeCategories : expenseCategories;
       const customOptions = type === 'income' ? customIncomeCategories : customExpenseCategories;
       const allOptions = [...baseOptions, ...customOptions];
 
       allOptions.forEach(cat => {
-        // Form dropdown
         const opt = document.createElement('option'); 
-        opt.value = cat; 
-        opt.textContent = cat; 
+        opt.value = cat; opt.textContent = getCatT(cat); 
         select.appendChild(opt);
 
-        // Filter dropdown
         const filterOpt = document.createElement('option');
-        filterOpt.value = cat;
-        filterOpt.textContent = cat;
+        filterOpt.value = cat; filterOpt.textContent = getCatT(cat);
         filterSelect.appendChild(filterOpt);
       });
 
       const addOpt = document.createElement('option');
       addOpt.value = "ADD_NEW_CUSTOM_CAT";
-      addOpt.textContent = "➕ Add Custom...";
+      addOpt.textContent = lang === 'ta' ? "➕ தனிப்பயன் சேர்..." : "➕ Add Custom...";
       addOpt.style.color = "#ed5e21"; 
       select.appendChild(addOpt);
     }
@@ -405,13 +370,9 @@
       const select = document.getElementById('categorySelect');
       const input = document.getElementById('customCategoryInput');
       const cancelBtn = document.getElementById('cancelCustomCat');
-
       if (select.value === 'ADD_NEW_CUSTOM_CAT') {
-        select.style.display = 'none';
-        input.style.display = 'block';
-        cancelBtn.style.display = 'block';
-        input.value = ''; 
-        input.focus();    
+        select.style.display = 'none'; input.style.display = 'block'; cancelBtn.style.display = 'block';
+        input.value = ''; input.focus();    
       }
     }
 
@@ -419,11 +380,7 @@
       const select = document.getElementById('categorySelect');
       const input = document.getElementById('customCategoryInput');
       const cancelBtn = document.getElementById('cancelCustomCat');
-
-      input.style.display = 'none';
-      cancelBtn.style.display = 'none';
-      select.style.display = 'block';
-      select.selectedIndex = 0; 
+      input.style.display = 'none'; cancelBtn.style.display = 'none'; select.style.display = 'block'; select.selectedIndex = 0; 
     }
 
     function saveTransaction() {
@@ -441,21 +398,18 @@
       if (customInput.style.display === 'block') {
         finalCategory = customInput.value.trim();
         if (!finalCategory) { showToast("Please type a category name"); return; }
-        
         if (type === 'income') {
           if (!incomeCategories.includes(finalCategory) && !customIncomeCategories.includes(finalCategory)) {
-            customIncomeCategories.push(finalCategory);
-            localStorage.setItem('customIncomeCategories', JSON.stringify(customIncomeCategories));
+            customIncomeCategories.push(finalCategory); localStorage.setItem('customIncomeCategories', JSON.stringify(customIncomeCategories));
           }
         } else {
           if (!expenseCategories.includes(finalCategory) && !customExpenseCategories.includes(finalCategory)) {
-            customExpenseCategories.push(finalCategory);
-            localStorage.setItem('customExpenseCategories', JSON.stringify(customExpenseCategories));
+            customExpenseCategories.push(finalCategory); localStorage.setItem('customExpenseCategories', JSON.stringify(customExpenseCategories));
           }
         }
       } else {
         finalCategory = document.getElementById('categorySelect').value;
-        if (finalCategory === 'ADD_NEW_CUSTOM_CAT') { showToast("Please select a valid category"); return; }
+        if (finalCategory === 'ADD_NEW_CUSTOM_CAT') return; 
       }
 
       if (editingId) {
@@ -467,92 +421,62 @@
       }
 
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
-      showToast(editingId ? "Entry Updated" : "Saved Successfully");
+      showToast(editingId ? "Updated" : "Saved");
       
-      document.getElementById('amount').value = ''; 
-      document.getElementById('detailsInput').value = ''; 
-      document.getElementById('paymentModeSelect').value = 'Cash'; // Reset to default
-      cancelCustomInput(); 
-      updateCategories();  
-      updateHeaderBalance();
-      refreshView();
+      document.getElementById('amount').value = ''; document.getElementById('detailsInput').value = ''; 
+      document.getElementById('paymentModeSelect').value = 'Cash'; 
+      cancelCustomInput(); updateCategories(); updateHeaderBalance(); refreshView();
     }
 
     function editTransaction(id) {
       const entry = ledger.find(e => e.id === id);
       if (!entry) return;
-      
       document.querySelector(`input[name="txnType"][value="${entry.type}"]`).checked = true;
-      cancelCustomInput(); 
-      updateCategories();
-      
+      cancelCustomInput(); updateCategories();
       document.getElementById('categorySelect').value = entry.category;
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
       document.getElementById('detailsInput').value = entry.details || '';
       document.getElementById('paymentModeSelect').value = entry.paymentMode || 'Cash';
-
       editingId = id;
-      document.getElementById('submitBtn').textContent = 'Update Transaction';
+      document.getElementById('submitBtn').textContent = getT('btnUpdate');
       document.getElementById('cancelBtn').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
       editingId = null;
-      document.getElementById('amount').value = '';
-      document.getElementById('detailsInput').value = ''; 
-      document.getElementById('txnDate').valueAsDate = new Date();
-      document.getElementById('paymentModeSelect').value = 'Cash';
-      document.getElementById('submitBtn').textContent = 'Add Transaction';
+      document.getElementById('amount').value = ''; document.getElementById('detailsInput').value = ''; 
+      document.getElementById('txnDate').valueAsDate = new Date(); document.getElementById('paymentModeSelect').value = 'Cash';
+      document.getElementById('submitBtn').textContent = getT('btnAdd');
       document.getElementById('cancelBtn').style.display = 'none';
       cancelCustomInput(); 
     }
 
     function deleteTransaction(id) {
-      if (confirm("Delete this entry entirely?")) {
-        ledger = ledger.filter(e => e.id !== id);
-        localStorage.setItem('priestLedger', JSON.stringify(ledger));
-        if (editingId === id) cancelEdit();
-        updateHeaderBalance();
-        refreshView();
+      if (confirm("Delete?")) {
+        ledger = ledger.filter(e => e.id !== id); localStorage.setItem('priestLedger', JSON.stringify(ledger));
+        if (editingId === id) cancelEdit(); updateHeaderBalance(); refreshView();
       }
     }
 
-    // --- FULL DETAILS MODAL LOGIC ---
     function showDetailsModal(id) {
-      const entry = ledger.find(e => e.id === id);
-      if (!entry) return;
-      
+      const entry = ledger.find(e => e.id === id); if (!entry) return;
       const isIncome = entry.type === 'income';
-      document.getElementById('modalCategory').innerText = entry.category;
-      
+      document.getElementById('modalCategory').innerText = getCatT(entry.category);
       const amtElem = document.getElementById('modalAmount');
       amtElem.innerText = `${isIncome ? '+' : '-'}₹${entry.amount.toLocaleString('en-IN')}`;
       amtElem.className = isIncome ? 'color-green' : 'color-red';
-      
       const dateStr = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       document.getElementById('modalDate').innerHTML = `${dateStr} &bull; <strong style="color:white;">${entry.paymentMode || 'Cash'}</strong>`;
-      
       const notesElem = document.getElementById('modalNotes');
-      if (entry.details) {
-        notesElem.innerText = entry.details;
-        notesElem.style.color = "white";
-        notesElem.style.fontStyle = "normal";
-      } else {
-        notesElem.innerText = "No additional notes provided.";
-        notesElem.style.color = "var(--text-dim)";
-        notesElem.style.fontStyle = "italic";
-      }
-      
+      if (entry.details) { notesElem.innerText = entry.details; notesElem.style.color = "white"; notesElem.style.fontStyle = "normal"; } 
+      else { notesElem.innerText = getT('txtNoNotes'); notesElem.style.color = "var(--text-dim)"; notesElem.style.fontStyle = "italic"; }
       document.getElementById('detailsOverlay').style.display = 'flex';
     }
 
-    function closeDetailsModal() {
-      document.getElementById('detailsOverlay').style.display = 'none';
-    }
+    function closeDetailsModal() { document.getElementById('detailsOverlay').style.display = 'none'; }
 
-    // --- COPY TO WHATSAPP LOGIC ---
     function copyToWhatsApp() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -560,101 +484,54 @@
       const filterMode = document.getElementById('filterMode').value;
       
       let displayEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
-      
-      if (filterCat !== 'ALL') {
-        displayEntries = displayEntries.filter(e => e.category === filterCat);
-      }
-
-      if (filterMode !== 'ALL') {
-        displayEntries = displayEntries.filter(e => e.paymentMode === filterMode);
-      }
-
+      if (filterCat !== 'ALL') displayEntries = displayEntries.filter(e => e.category === filterCat);
+      if (filterMode !== 'ALL') displayEntries = displayEntries.filter(e => e.paymentMode === filterMode);
       if (searchTerm) {
-        displayEntries = displayEntries.filter(e => 
-          e.category.toLowerCase().includes(searchTerm) || 
-          (e.details && e.details.toLowerCase().includes(searchTerm)) || 
-          e.amount.toString().includes(searchTerm) || 
-          (e.paymentMode && e.paymentMode.toLowerCase().includes(searchTerm)) ||
-          e.date.includes(searchTerm)
-        );
+        displayEntries = displayEntries.filter(e => getCatT(e.category).toLowerCase().includes(searchTerm) || (e.details && e.details.toLowerCase().includes(searchTerm)) || e.amount.toString().includes(searchTerm) || (e.paymentMode && e.paymentMode.toLowerCase().includes(searchTerm)) || e.date.includes(searchTerm));
       }
-      
       if (currentViewType === 'monthly') {
-        const selectedMonthStr = document.getElementById('monthPicker').value;
-        if (selectedMonthStr) {
-          const [year, month] = selectedMonthStr.split('-');
-          displayEntries = displayEntries.filter(entry => { 
-            const entryDate = new Date(entry.date); 
-            return entryDate.getMonth() + 1 === parseInt(month) && entryDate.getFullYear() === parseInt(year); 
-          });
-        }
+        const selMonth = document.getElementById('monthPicker').value;
+        if (selMonth) { const [year, month] = selMonth.split('-'); displayEntries = displayEntries.filter(e => { const d = new Date(e.date); return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year); }); }
       }
-      
-      if (displayEntries.length === 0) {
-        showToast("No records to copy!");
-        return;
-      }
-
+      if (displayEntries.length === 0) { showToast(getT('txtNoRecords')); return; }
       displayEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
       
-      const tripName = activeTripId ? trips.find(t => t.id === activeTripId).name : "General Ledger";
-      const viewLabel = currentViewType === 'monthly' ? new Date(document.getElementById('monthPicker').value).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "All-Time";
-      const typeLabel = activeType === 'income' ? '🟢 *INCOME*' : '🔴 *EXPENSE*';
+      const tripName = activeTripId ? trips.find(t => t.id === activeTripId).name : getT('optGenLedger');
+      const viewLabel = currentViewType === 'monthly' ? new Date(document.getElementById('monthPicker').value).toLocaleDateString(lang==='ta'?'ta-IN':'en-US', { month: 'long', year: 'numeric' }) : getT('txtAllTime');
+      const typeLabel = activeType === 'income' ? `🟢 *${getT('lblIncome').toUpperCase()}*` : `🔴 *${getT('lblExpense').toUpperCase()}*`;
       
-      let total = 0;
-      let textToCopy = `*Ledger:* ${tripName}\n*Period:* ${viewLabel}\n${typeLabel}\n\n`;
-      
+      let total = 0; let textToCopy = `*Ledger:* ${tripName}\n*Period:* ${viewLabel}\n${typeLabel}\n\n`;
       displayEntries.forEach(e => {
         total += e.amount;
         const dateStr = new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const noteStr = e.details ? `\n   ↳ _${e.details}_` : '';
         const modeStr = e.paymentMode ? ` (${e.paymentMode})` : '';
-        textToCopy += `• ${dateStr} | *${e.category}*${modeStr} | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
+        textToCopy += `• ${dateStr} | *${getCatT(e.category)}*${modeStr} | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
       });
-      
       textToCopy += `\n*TOTAL: ₹${total.toLocaleString('en-IN')}*`;
       
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          showToast("Copied nicely for WhatsApp!");
-        }).catch(err => {
-          showToast("Failed to copy.");
-        });
-      } else {
-        showToast("Clipboard not supported on this browser.");
-      }
+      if (navigator.clipboard) { navigator.clipboard.writeText(textToCopy).then(() => showToast(getT('txtCopied'))).catch(err => showToast("Failed.")); } 
+      else { showToast("Clipboard not supported."); }
     }
 
     function updateHeaderBalance() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       let contextEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
-      
       if (currentViewType === 'monthly') {
-        const selectedMonthStr = document.getElementById('monthPicker').value;
-        if (selectedMonthStr) {
-          const [year, month] = selectedMonthStr.split('-');
-          contextEntries = contextEntries.filter(entry => { 
-            const entryDate = new Date(entry.date); 
-            return entryDate.getMonth() + 1 === parseInt(month) && entryDate.getFullYear() === parseInt(year); 
-          });
-        }
+        const selMonth = document.getElementById('monthPicker').value;
+        if (selMonth) { const [y, m] = selMonth.split('-'); contextEntries = contextEntries.filter(e => { const d = new Date(e.date); return d.getMonth() + 1 === parseInt(m) && d.getFullYear() === parseInt(y); }); }
       }
-      
-      let total = 0;
-      contextEntries.forEach(e => { total += e.amount; });
-      
+      let total = 0; contextEntries.forEach(e => total += e.amount);
       document.getElementById('headerBalance').innerText = total.toLocaleString('en-IN');
       
       const balanceLabel = document.getElementById('balanceLabel');
       const balanceText = document.getElementById('headerBalanceText');
-      const viewLabel = currentViewType === 'monthly' ? 'Monthly' : 'Total';
+      const viewStr = currentViewType === 'monthly' ? getT('txtMonthly') : getT('txtTotal');
       
       if (activeType === 'income') {
-        balanceLabel.innerText = viewLabel + ' Income';
-        balanceText.style.color = 'var(--income)';
+        balanceLabel.innerText = `${viewStr} ${getT('lblIncome')}`; balanceText.style.color = 'var(--income)';
       } else {
-        balanceLabel.innerText = viewLabel + ' Expense';
-        balanceText.style.color = 'var(--expense)';
+        balanceLabel.innerText = `${viewStr} ${getT('lblExpense')}`; balanceText.style.color = 'var(--expense)';
       }
     }
 
@@ -665,76 +542,46 @@
       const filterCat = document.getElementById('filterCategory').value;
       const filterMode = document.getElementById('filterMode').value;
       
-      let contextEntries = entriesToFilter.filter(e => e.tripId === activeTripId);
-      let displayEntries = contextEntries.filter(e => e.type === activeType);
+      let displayEntries = entriesToFilter.filter(e => e.tripId === activeTripId && e.type === activeType);
       
-      // Apply Category Dropdown Filter
-      if (filterCat !== 'ALL') {
-        displayEntries = displayEntries.filter(e => e.category === filterCat);
-      }
-
-      // Apply Mode Dropdown Filter
-      if (filterMode !== 'ALL') {
-        displayEntries = displayEntries.filter(e => e.paymentMode === filterMode);
-      }
-
-      // Apply Text Search Filter
+      if (filterCat !== 'ALL') displayEntries = displayEntries.filter(e => e.category === filterCat);
+      if (filterMode !== 'ALL') displayEntries = displayEntries.filter(e => e.paymentMode === filterMode);
       if (searchTerm) {
-        displayEntries = displayEntries.filter(e => 
-          e.category.toLowerCase().includes(searchTerm) || 
-          (e.details && e.details.toLowerCase().includes(searchTerm)) || 
-          e.amount.toString().includes(searchTerm) || 
-          (e.paymentMode && e.paymentMode.toLowerCase().includes(searchTerm)) ||
-          e.date.includes(searchTerm)
-        );
+        displayEntries = displayEntries.filter(e => getCatT(e.category).toLowerCase().includes(searchTerm) || (e.details && e.details.toLowerCase().includes(searchTerm)) || e.amount.toString().includes(searchTerm) || (e.paymentMode && e.paymentMode.toLowerCase().includes(searchTerm)) || e.date.includes(searchTerm));
       }
 
-      // Calculate the Dynamic Total
-      let dynamicTotal = 0;
-      displayEntries.forEach(e => dynamicTotal += e.amount);
+      let dynamicTotal = 0; displayEntries.forEach(e => dynamicTotal += e.amount);
       const totalColor = activeType === 'income' ? 'var(--income)' : 'var(--expense)';
       
       let html = `
       <div class="txn-header" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-        <div>
-          <span>${titleText}</span> <span style="font-size:12px; font-weight:400; color:var(--text-dim);">(${displayEntries.length})</span>
-        </div>
-        <div style="color:${totalColor}; font-weight:700; font-size: 15px;">
-          Sum: ₹${dynamicTotal.toLocaleString('en-IN')}
-        </div>
+        <div><span>${titleText}</span> <span style="font-size:12px; font-weight:400; color:var(--text-dim);">(${displayEntries.length})</span></div>
+        <div style="color:${totalColor}; font-weight:700; font-size: 15px;">${getT('txtSum')}: ₹${dynamicTotal.toLocaleString('en-IN')}</div>
       </div>`;
 
       if (displayEntries.length === 0) {
-        html += `<div style="text-align:center; padding:30px 0; color:var(--text-dim);">No matching records found.</div>`;
+        html += `<div style="text-align:center; padding:30px 0; color:var(--text-dim);">${getT('txtNoRecords')}</div>`;
       } else {
         displayEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
         displayEntries.forEach(entry => {
-          const isIncome = entry.type === 'income';
-          const rowClass = isIncome ? 'green-glow' : 'red-glow';
-          const amtColor = isIncome ? 'color-green' : 'color-red';
-          const sign = isIncome ? '+' : '-';
-          const dateObj = new Date(entry.date);
-          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const isInc = entry.type === 'income'; const rowClass = isInc ? 'green-glow' : 'red-glow';
+          const amtColor = isInc ? 'color-green' : 'color-red'; const sign = isInc ? '+' : '-';
+          const dateStr = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const icon = categoryIcons[entry.category] || "🔹";
-          
           const detailsHtml = entry.details ? `<span class="txn-subtext">• ${entry.details}</span>` : '';
-
+          
           html += `
           <div class="txn-row ${rowClass}">
-            <div class="txn-left" onclick="showDetailsModal(${entry.id})" title="Click to view full details">
+            <div class="txn-left" onclick="showDetailsModal(${entry.id})" title="View Details">
               <div class="txn-icon">${icon}</div>
               <div class="txn-details">
-                <div class="txn-name">${entry.category}${detailsHtml}</div>
+                <div class="txn-name">${getCatT(entry.category)}${detailsHtml}</div>
                 <div class="txn-time">${dateStr}</div>
               </div>
             </div>
             <div class="txn-right">
               <div class="txn-amt ${amtColor}">${sign}₹${entry.amount.toLocaleString('en-IN')}</div>
-              <div class="txn-actions">
-                <button class="action-icon" onclick="editTransaction(${entry.id})">✎</button>
-                <button class="action-icon" onclick="deleteTransaction(${entry.id})">✕</button>
-              </div>
+              <div class="txn-actions"><button class="action-icon" onclick="editTransaction(${entry.id})">✎</button><button class="action-icon" onclick="deleteTransaction(${entry.id})">✕</button></div>
             </div>
           </div>`;
         });
@@ -743,49 +590,29 @@
     }
 
     function triggerTotalView() { 
-      currentViewType = 'all'; 
-      document.getElementById('searchInput').value = ''; 
-      document.getElementById('filterCategory').value = 'ALL';
-      document.getElementById('filterMode').value = 'ALL';
-      document.getElementById('monthPicker').value = ''; 
-      refreshView(); 
+      currentViewType = 'all'; document.getElementById('searchInput').value = ''; 
+      document.getElementById('filterCategory').value = 'ALL'; document.getElementById('filterMode').value = 'ALL';
+      document.getElementById('monthPicker').value = ''; refreshView(); 
     }
 
-    function triggerMonthlyView() { 
-      const selectedMonthStr = document.getElementById('monthPicker').value;
-      if (!selectedMonthStr) {
-        currentViewType = 'all'; 
-      } else {
-        currentViewType = 'monthly'; 
-      }
-      refreshView(); 
-    }
-
-    function showTotal() { renderTable(ledger, 'All-Time Report'); }
-
+    function triggerMonthlyView() { currentViewType = document.getElementById('monthPicker').value ? 'monthly' : 'all'; refreshView(); }
+    function showTotal() { renderTable(ledger, getT('txtAllTime')); }
     function showMonthly() {
-      const selectedMonthStr = document.getElementById('monthPicker').value;
-      if (!selectedMonthStr) return;
-      const [year, month] = selectedMonthStr.split('-');
-      const monthlyEntries = ledger.filter(entry => { const entryDate = new Date(entry.date); return entryDate.getMonth() + 1 === parseInt(month) && entryDate.getFullYear() === parseInt(year); });
-      const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short', year: 'numeric' });
-      renderTable(monthlyEntries, `${monthName} Report`);
+      const selMonth = document.getElementById('monthPicker').value; if (!selMonth) return;
+      const [year, month] = selMonth.split('-');
+      const monthlyEntries = ledger.filter(e => { const d = new Date(e.date); return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year); });
+      const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString(lang==='ta'?'ta-IN':'en-US', { month: 'short', year: 'numeric' });
+      renderTable(monthlyEntries, `${monthName} ${getT('txtReport')}`);
     }
     
-    function refreshView() { 
-      updateHeaderBalance(); 
-      if (currentViewType === 'all') showTotal(); 
-      else if (currentViewType === 'monthly') showMonthly(); 
-    }
-
+    function refreshView() { updateHeaderBalance(); currentViewType === 'all' ? showTotal() : showMonthly(); }
     function showToast(msg) {
       const toast = document.createElement('div'); toast.textContent = msg;
       Object.assign(toast.style, { position: 'fixed', bottom: '40px', left: '50%', transform: 'translateX(-50%)', background: 'white', color: 'black', padding: '14px 28px', borderRadius: '100px', zIndex: '1000', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', transition: 'opacity 0.3s', fontSize: '15px', fontWeight: '700' });
-      document.body.appendChild(toast);
-      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
+      document.body.appendChild(toast); setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
     }
 
-    updateCategories(); initFolders(); triggerTotalView();
+    applyLanguageUI(); initFolders(); triggerTotalView();
   </script>
 </body>
 </html>
