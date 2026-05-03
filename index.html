@@ -21,9 +21,11 @@
       --income: #00D362; 
       --expense: #FF5A5F;
       --pending: #FFB340;
+      --planned: #00E5FF;
       --txn-red: linear-gradient(90deg, #3a1616 0%, #111111 100%);
       --txn-green: linear-gradient(90deg, #163a20 0%, #111111 100%);
       --txn-yellow: linear-gradient(90deg, #3a2e16 0%, #111111 100%);
+      --txn-cyan: linear-gradient(90deg, #003a40 0%, #111111 100%);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
@@ -54,19 +56,21 @@
     
     .type-toggle { display: flex; background: #111; border-radius: 16px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
     .type-toggle input[type="radio"] { display: none; }
-    .type-toggle label { flex: 1; text-align: center; padding: 12px; z-index: 1; font-size: 13px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color 0.3s ease; }
-    .toggle-slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(33.33% - 4px); background: #222; border-radius: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 0; }
+    .type-toggle label { flex: 1; text-align: center; padding: 12px 0; z-index: 1; font-size: 12px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color 0.3s ease; }
+    .toggle-slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(25% - 4px); background: #222; border-radius: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 0; }
     
     #typeIncome:checked ~ .toggle-slider { transform: translateX(0); }
     #typeExpense:checked ~ .toggle-slider { transform: translateX(100%); }
     #typePending:checked ~ .toggle-slider { transform: translateX(200%); }
+    #typePlanned:checked ~ .toggle-slider { transform: translateX(300%); }
     
     #typeIncome:checked ~ #lblIncome { color: var(--income); }
     #typeExpense:checked ~ #lblExpense { color: var(--expense); }
     #typePending:checked ~ #lblPending { color: var(--pending); }
+    #typePlanned:checked ~ #lblPlanned { color: var(--planned); }
 
     .input-row { display: flex; gap: 10px; }
-    .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; }
+    .input-group { flex: 1; background: #111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; }
     
     .label-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .input-group label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin: 0; }
@@ -74,6 +78,8 @@
     .input-group select, .input-group input { background: transparent; border: none; color: white; font-size: 16px; font-weight: 600; width: 100%; appearance: none; padding: 0;}
     .input-group select option { background: #111; color: white; }
     .input-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    
+    .input-group input[type="checkbox"] { appearance: auto; width: 22px; height: 22px; cursor: pointer; accent-color: var(--planned); }
 
     .details-input { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 14px 15px; font-size: 15px; color: white; width: 100%; font-weight: 500; }
     .details-input::placeholder { color: rgba(255,255,255,0.3); }
@@ -81,6 +87,11 @@
     .btn-add { width: 100%; background: var(--orange-btn); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; box-shadow: 0 10px 20px rgba(216, 69, 17, 0.3); transition: transform 0.1s; cursor: pointer; }
     .btn-add:active { transform: scale(0.97); }
     .btn-cancel { background: #222; color: #fff; border: 1px solid rgba(255,255,255,0.1); width: 100%; padding: 14px; border-radius: 16px; font-weight: 600; margin-top: 5px; display: none; }
+
+    /* --- PULSE ALERT CARD --- */
+    .pulse-alert-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+    .pulse-card { background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 16px; padding: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; animation: pulseGlow 2s infinite; }
+    @keyframes pulseGlow { 0% { box-shadow: 0 0 5px rgba(0, 229, 255, 0.1); } 50% { box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); } 100% { box-shadow: 0 0 5px rgba(0, 229, 255, 0.1); } }
 
     /* --- TRANSACTIONS LIST --- */
     .transactions { padding: 10px 20px 40px; }
@@ -94,6 +105,7 @@
     .txn-row.red-glow { background: var(--txn-red); }
     .txn-row.green-glow { background: var(--txn-green); }
     .txn-row.yellow-glow { background: var(--txn-yellow); }
+    .txn-row.cyan-glow { background: var(--txn-cyan); }
 
     .txn-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; cursor: pointer; }
     .txn-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; background: rgba(255,255,255,0.1); }
@@ -107,9 +119,11 @@
     .color-red { color: var(--expense); }
     .color-green { color: var(--income); }
     .color-yellow { color: var(--pending); }
+    .color-cyan { color: var(--planned); }
     .txn-actions { display: flex; gap: 8px; margin-top: 4px; }
     .action-icon { font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 8px; cursor: pointer; color: white; border: none; }
     .action-btn-text { font-size: 11px; background: rgba(255,179,64,0.1); color: var(--pending); border: 1px solid rgba(255,179,64,0.3); padding: 4px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .action-btn-text.cyan { background: rgba(0,229,255,0.1); color: var(--planned); border: 1px solid rgba(0,229,255,0.3); }
 
     /* --- OVERLAYS / MODALS --- */
     .overlay-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
@@ -171,6 +185,9 @@
       <input type="radio" id="typePending" name="txnType" value="pending" onchange="handleTypeChange()">
       <label for="typePending" id="lblPending">Pending</label>
       
+      <input type="radio" id="typePlanned" name="txnType" value="planned" onchange="handleTypeChange()">
+      <label for="typePlanned" id="lblPlanned">Planned</label>
+
       <div class="toggle-slider"></div>
     </div>
 
@@ -188,6 +205,13 @@
       <div class="input-group">
         <div class="label-header"><label id="lblDate">Date</label></div>
         <input type="date" id="txnDate">
+      </div>
+    </div>
+
+    <div class="input-row" id="recurringRow" style="display: none;">
+      <div class="input-group" style="flex-direction: row; align-items: center; gap: 10px; background: rgba(0,229,255,0.05); border-color: rgba(0,229,255,0.2);">
+        <input type="checkbox" id="isRecurring">
+        <label for="isRecurring" id="lblRecurring" style="font-size: 14px; color: white; margin: 0; text-transform: none; cursor: pointer; flex: 1;">Repeat Monthly</label>
       </div>
     </div>
 
@@ -211,6 +235,9 @@
   </div>
 
   <div class="transactions">
+    
+    <div id="pulseAlerts" class="pulse-alert-container"></div>
+
     <div class="filter-row">
       <input type="search" id="searchInput" class="filter-input" style="flex: 1;" placeholder="Search notes/mode..." oninput="refreshView()">
     </div>
@@ -233,7 +260,7 @@
     // --- LANGUAGE DICTIONARY ---
     const dict = {
       en: {
-        lblIncome: "Income", lblExpense: "Expense", lblPending: "Pending",
+        lblIncome: "Income", lblExpense: "Expense", lblPending: "Pending", lblPlanned: "Planned", lblRecurring: "Repeat Monthly",
         lblCategory: "Category", lblDate: "Date", lblMode: "Mode",
         optGenLedger: "General Ledger", optNewTrip: "+ New Trip...", optAllCat: "All Categories", optAllModes: "All Modes",
         placeholderDetails: "Add details or notes (optional)...", placeholderSearch: "Search notes/mode...",
@@ -241,10 +268,12 @@
         lblModalNotesTitle: "Notes & Details", btnCloseModal: "Close Details", txtNoNotes: "No additional notes provided.",
         txtNoRecords: "No matching records found.", txtSum: "Sum", txtCopied: "Copied nicely for WhatsApp!",
         txtAllTime: "All-Time Report", txtReport: "Report", txtTotal: "Total", txtMonthly: "Monthly",
-        txtPendingDuesBadge: "⏳ Pending Dues:", btnMarkPaid: "Mark Paid", txtMarkedPaid: "Marked as Paid!", txtMovedToIncome: "(Original Date: "
+        txtPendingDuesBadge: "⏳ Pending Dues:", btnMarkPaid: "Mark Paid", txtMarkedPaid: "Marked as Paid!",
+        txtOriginalDate: "(Original Date: ", btnPayNow: "Pay Now", txtExpensePaid: "Expense Paid!",
+        txtDaysLeft: "Days Left", txtDueToday: "Due Today", txtOverdue: "Overdue!"
       },
       ta: {
-        lblIncome: "வருமானம்", lblExpense: "செலவு", lblPending: "நிலுவை",
+        lblIncome: "வருமானம்", lblExpense: "செலவு", lblPending: "நிலுவை", lblPlanned: "திட்டமிட்டவை", lblRecurring: "மாதாந்திரம்",
         lblCategory: "வகை", lblDate: "தேதி", lblMode: "முறை",
         optGenLedger: "பொது கணக்கு", optNewTrip: "+ புதிய கணக்கு...", optAllCat: "அனைத்து வகைகள்", optAllModes: "அனைத்து முறைகள்",
         placeholderDetails: "விவரங்கள்/குறிப்புகள் (விரும்பினால்)...", placeholderSearch: "தேடுக...",
@@ -252,7 +281,9 @@
         lblModalNotesTitle: "விவரங்கள்", btnCloseModal: "மூடு", txtNoNotes: "குறிப்புகள் எதுவும் இல்லை.",
         txtNoRecords: "பதிவுகள் எதுவும் இல்லை.", txtSum: "மொத்தம்", txtCopied: "வாட்ஸ்அப்பிற்கு நகலெடுக்கப்பட்டது!",
         txtAllTime: "முழு அறிக்கை", txtReport: "அறிக்கை", txtTotal: "மொத்த", txtMonthly: "மாத",
-        txtPendingDuesBadge: "⏳ நிலுவைத் தொகை:", btnMarkPaid: "பெறப்பட்டது", txtMarkedPaid: "பணம் பெறப்பட்டது!", txtMovedToIncome: "(பழைய தேதி: "
+        txtPendingDuesBadge: "⏳ நிலுவைத் தொகை:", btnMarkPaid: "பெறப்பட்டது", txtMarkedPaid: "பணம் பெறப்பட்டது!",
+        txtOriginalDate: "(பழைய தேதி: ", btnPayNow: "செலுத்து", txtExpensePaid: "செலுத்தப்பட்டது!",
+        txtDaysLeft: "நாட்கள் மீதம்", txtDueToday: "இன்று தேதியாகும்", txtOverdue: "தாமதம்!"
       }
     };
 
@@ -276,6 +307,9 @@
       document.getElementById('lblIncome').innerText = getT('lblIncome');
       document.getElementById('lblExpense').innerText = getT('lblExpense');
       document.getElementById('lblPending').innerText = getT('lblPending');
+      document.getElementById('lblPlanned').innerText = getT('lblPlanned');
+      document.getElementById('lblRecurring').innerText = getT('lblRecurring');
+      
       document.getElementById('lblCategory').innerText = getT('lblCategory');
       document.getElementById('lblDate').innerText = getT('lblDate');
       document.getElementById('lblMode').innerText = getT('lblMode');
@@ -361,8 +395,16 @@
       
       const type = document.querySelector('input[name="txnType"]:checked').value;
       const submitBtn = document.getElementById('submitBtn');
+      const recurringRow = document.getElementById('recurringRow');
+      
+      // Show recurring option only for planned items
+      recurringRow.style.display = (type === 'planned') ? 'flex' : 'none';
+      
       if(type === 'pending' && !editingId) {
         submitBtn.style.background = 'var(--pending)';
+        submitBtn.style.color = '#000';
+      } else if (type === 'planned' && !editingId) {
+        submitBtn.style.background = 'var(--planned)';
         submitBtn.style.color = '#000';
       } else if (!editingId) {
         submitBtn.style.background = 'var(--orange-btn)';
@@ -381,9 +423,10 @@
       select.innerHTML = '';
       filterSelect.innerHTML = `<option value="ALL">${getT('optAllCat')}</option>`;
       
-      // If "Pending" is selected, we show Income categories because pending money is usually expected income.
-      const baseOptions = type === 'expense' ? expenseCategories : incomeCategories;
-      const customOptions = type === 'expense' ? customExpenseCategories : customIncomeCategories;
+      // If "Planned" is selected, we show Expense categories. 
+      // If "Pending" is selected, we show Income categories.
+      const baseOptions = (type === 'expense' || type === 'planned') ? expenseCategories : incomeCategories;
+      const customOptions = (type === 'expense' || type === 'planned') ? customExpenseCategories : customIncomeCategories;
       const allOptions = [...baseOptions, ...customOptions];
 
       allOptions.forEach(cat => {
@@ -425,6 +468,7 @@
       const date = document.getElementById('txnDate').value;
       const type = document.querySelector('input[name="txnType"]:checked').value;
       const paymentMode = document.getElementById('paymentModeSelect').value;
+      const isRecurring = document.getElementById('isRecurring').checked;
       
       let finalCategory = '';
       const customInput = document.getElementById('customCategoryInput');
@@ -435,7 +479,7 @@
       if (customInput.style.display === 'block') {
         finalCategory = customInput.value.trim();
         if (!finalCategory) { showToast("Please type a category name"); return; }
-        if (type !== 'expense') {
+        if (type !== 'expense' && type !== 'planned') {
           if (!incomeCategories.includes(finalCategory) && !customIncomeCategories.includes(finalCategory)) {
             customIncomeCategories.push(finalCategory); localStorage.setItem('customIncomeCategories', JSON.stringify(customIncomeCategories));
           }
@@ -451,10 +495,10 @@
 
       if (editingId) {
         const index = ledger.findIndex(e => e.id === editingId);
-        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date, paymentMode };
+        if (index > -1) ledger[index] = { id: editingId, tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date, paymentMode, isRecurring };
         cancelEdit(); 
       } else {
-        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date, paymentMode });
+        ledger.push({ id: Date.now(), tripId: activeTripId, type, category: finalCategory, details: detailsText, amount, date, paymentMode, isRecurring });
       }
 
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
@@ -462,6 +506,7 @@
       
       document.getElementById('amount').value = ''; document.getElementById('detailsInput').value = ''; 
       document.getElementById('paymentModeSelect').value = 'Cash'; 
+      document.getElementById('isRecurring').checked = false;
       cancelCustomInput(); updateCategories(); updateHeaderBalance(); refreshView();
     }
 
@@ -469,13 +514,14 @@
       const entry = ledger.find(e => e.id === id);
       if (!entry) return;
       document.querySelector(`input[name="txnType"][value="${entry.type}"]`).checked = true;
-      handleTypeChange(); // Triggers UI updates
+      handleTypeChange(); 
       
       document.getElementById('categorySelect').value = entry.category;
       document.getElementById('amount').value = entry.amount;
       document.getElementById('txnDate').value = entry.date;
       document.getElementById('detailsInput').value = entry.details || '';
       document.getElementById('paymentModeSelect').value = entry.paymentMode || 'Cash';
+      document.getElementById('isRecurring').checked = entry.isRecurring || false;
       editingId = id;
       
       const submitBtn = document.getElementById('submitBtn');
@@ -490,10 +536,11 @@
       editingId = null;
       document.getElementById('amount').value = ''; document.getElementById('detailsInput').value = ''; 
       document.getElementById('txnDate').valueAsDate = new Date(); document.getElementById('paymentModeSelect').value = 'Cash';
+      document.getElementById('isRecurring').checked = false;
       
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.textContent = getT('btnAdd');
-      handleTypeChange(); // Resets color based on toggle
+      handleTypeChange(); 
       
       document.getElementById('cancelBtn').style.display = 'none';
       cancelCustomInput(); 
@@ -506,49 +553,136 @@
       }
     }
 
-    // --- NEW PENDING TO INCOME LOGIC ---
+    // --- PENDING TO INCOME LOGIC ---
     function markAsPaid(id) {
       const entry = ledger.find(e => e.id === id);
       if (!entry) return;
       
-      // Get today's local date properly formatted for input type="date"
       const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      const todayStr = `${yyyy}-${mm}-${dd}`;
-      
+      const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const oldDateObj = new Date(entry.date);
       const oldDateStr = oldDateObj.toLocaleDateString(lang==='ta'?'ta-IN':'en-US', { month: 'short', day: 'numeric' });
       
       entry.type = 'income';
       entry.date = todayStr;
       
-      // Append history to notes
-      const historyNote = `${getT('txtMovedToIncome')}${oldDateStr})`;
+      const historyNote = `${getT('txtOriginalDate')}${oldDateStr})`;
       entry.details = entry.details ? `${entry.details} ${historyNote}` : historyNote;
       
       localStorage.setItem('priestLedger', JSON.stringify(ledger));
       showToast(getT('txtMarkedPaid'));
-      
-      // Auto-switch view to income so they see the result immediately
       document.getElementById('typeIncome').click();
+    }
+
+    // --- PLANNED TO EXPENSE LOGIC (CLONE & KEEP) ---
+    function payPlanned(id) {
+      const entryIndex = ledger.findIndex(e => e.id === id);
+      if (entryIndex === -1) return;
+      const entry = ledger[entryIndex];
+      
+      const d = new Date();
+      const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const oldDateObj = new Date(entry.date);
+      const oldDateStr = oldDateObj.toLocaleDateString(lang==='ta'?'ta-IN':'en-US', { month: 'short', day: 'numeric' });
+      const historyNote = `${getT('txtOriginalDate')}${oldDateStr})`;
+
+      if (entry.isRecurring) {
+        const newExpense = { ...entry, id: Date.now() + Math.random(), type: 'expense', date: todayStr, isRecurring: false };
+        newExpense.details = newExpense.details ? `${newExpense.details} ${historyNote}` : historyNote;
+        ledger.push(newExpense);
+        
+        const nextDate = new Date(entry.date);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        entry.date = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
+      } else {
+        entry.type = 'expense';
+        entry.date = todayStr;
+        entry.details = entry.details ? `${entry.details} ${historyNote}` : historyNote;
+      }
+      
+      localStorage.setItem('priestLedger', JSON.stringify(ledger));
+      showToast(getT('txtExpensePaid'));
+      document.getElementById('typeExpense').click();
+    }
+
+    // --- PULSE ALERT ENGINE ---
+    function checkPlannedAlerts() {
+      const alertsContainer = document.getElementById('pulseAlerts');
+      alertsContainer.innerHTML = '';
+      alertsContainer.style.display = 'none'; 
+
+      // NEW: Only run the pulse alert logic if the user is on the Income or Expense tab
+      const activeType = document.querySelector('input[name="txnType"]:checked').value;
+      if (activeType !== 'income' && activeType !== 'expense') return;
+
+      let plannedEntries = ledger.filter(e => e.tripId === activeTripId && e.type === 'planned');
+      if (plannedEntries.length === 0) return;
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      
+      let hasAlerts = false;
+
+      plannedEntries.forEach(entry => {
+        const dueDate = new Date(entry.date);
+        dueDate.setHours(0,0,0,0);
+        
+        const diffTime = dueDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 3) {
+          hasAlerts = true;
+          let timeText = '';
+          if(diffDays > 0) timeText = `🔥 ${diffDays} ${getT('txtDaysLeft')}`;
+          else if (diffDays === 0) timeText = `🚨 ${getT('txtDueToday')}`;
+          else timeText = `⚠️ ${getT('txtOverdue')}`;
+          
+          const recIcon = entry.isRecurring ? '🔄 ' : '🗓️ ';
+          const detailsHtml = entry.details ? `<div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; font-style: italic;">"${entry.details}"</div>` : '';
+          
+          const card = document.createElement('div');
+          card.className = 'pulse-card';
+          card.innerHTML = `
+            <div style="flex: 1; padding-right: 10px;">
+              <div style="font-size: 14px; font-weight: 700; color: white;">${recIcon}${getCatT(entry.category)} • ₹${entry.amount.toLocaleString('en-IN')}</div>
+              ${detailsHtml}
+              <div style="font-size: 12px; color: var(--planned); margin-top: 6px; font-weight: 600;">${timeText}</div>
+            </div>
+            <button class="action-btn-text cyan" style="white-space: nowrap;" onclick="payPlanned(${entry.id})">💳 ${getT('btnPayNow')}</button>
+          `;
+          alertsContainer.appendChild(card);
+        }
+      });
+
+      if(hasAlerts) alertsContainer.style.display = 'flex';
     }
 
     function showDetailsModal(id) {
       const entry = ledger.find(e => e.id === id); if (!entry) return;
       const isIncome = entry.type === 'income';
       const isPending = entry.type === 'pending';
+      const isPlanned = entry.type === 'planned';
       
       document.getElementById('modalCategory').innerText = getCatT(entry.category);
       const amtElem = document.getElementById('modalAmount');
-      amtElem.innerText = `${isIncome ? '+' : (isPending ? '⏳' : '-')}₹${entry.amount.toLocaleString('en-IN')}`;
+      
+      let prefix = '-';
+      if(isIncome) prefix = '+';
+      if(isPending) prefix = '⏳';
+      if(isPlanned) prefix = '🗓️';
+
+      amtElem.innerText = `${prefix}₹${entry.amount.toLocaleString('en-IN')}`;
       
       if(isPending) amtElem.className = 'color-yellow';
+      else if(isPlanned) amtElem.className = 'color-cyan';
       else amtElem.className = isIncome ? 'color-green' : 'color-red';
       
       const dateStr = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      document.getElementById('modalDate').innerHTML = `${dateStr} &bull; <strong style="color:white;">${entry.paymentMode || 'Cash'}</strong>`;
+      let dateHtml = `${dateStr} &bull; <strong style="color:white;">${entry.paymentMode || 'Cash'}</strong>`;
+      if(entry.isRecurring) dateHtml += ` &bull; <strong style="color:var(--planned);">🔄 ${getT('lblRecurring')}</strong>`;
+
+      document.getElementById('modalDate').innerHTML = dateHtml;
+      
       const notesElem = document.getElementById('modalNotes');
       if (entry.details) { notesElem.innerText = entry.details; notesElem.style.color = "white"; notesElem.style.fontStyle = "normal"; } 
       else { notesElem.innerText = getT('txtNoNotes'); notesElem.style.color = "var(--text-dim)"; notesElem.style.fontStyle = "italic"; }
@@ -582,7 +716,8 @@
       let typeLabel = '';
       if(activeType === 'income') typeLabel = `🟢 *${getT('lblIncome').toUpperCase()}*`;
       else if (activeType === 'expense') typeLabel = `🔴 *${getT('lblExpense').toUpperCase()}*`;
-      else typeLabel = `🟡 *${getT('lblPending').toUpperCase()}*`;
+      else if (activeType === 'pending') typeLabel = `🟡 *${getT('lblPending').toUpperCase()}*`;
+      else typeLabel = `🗓️ *${getT('lblPlanned').toUpperCase()}*`;
       
       let total = 0; let textToCopy = `*Ledger:* ${tripName}\n*Period:* ${viewLabel}\n${typeLabel}\n\n`;
       displayEntries.forEach(e => {
@@ -590,7 +725,8 @@
         const dateStr = new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const noteStr = e.details ? `\n   ↳ _${e.details}_` : '';
         const modeStr = e.paymentMode ? ` (${e.paymentMode})` : '';
-        textToCopy += `• ${dateStr} | *${getCatT(e.category)}*${modeStr} | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
+        const recStr = e.isRecurring ? ` 🔄` : '';
+        textToCopy += `• ${dateStr} | *${getCatT(e.category)}*${modeStr}${recStr} | ₹${e.amount.toLocaleString('en-IN')}${noteStr}\n`;
       });
       textToCopy += `\n*TOTAL: ₹${total.toLocaleString('en-IN')}*`;
       
@@ -601,15 +737,13 @@
     function updateHeaderBalance() {
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       
-      // Calculate Global Pending for the Badge
       let globalPendingTotal = 0;
       ledger.filter(e => e.tripId === activeTripId && e.type === 'pending').forEach(e => globalPendingTotal += e.amount);
       document.getElementById('globalPending').innerText = globalPendingTotal.toLocaleString('en-IN');
       
-      // Show or hide the badge (hide it when on pending view since the big number is already pending)
-      document.getElementById('pendingBadge').style.display = (activeType === 'pending') ? 'none' : 'inline-block';
+      // Hide badge on Pending/Planned views to avoid confusion
+      document.getElementById('pendingBadge').style.display = (activeType === 'pending' || activeType === 'planned') ? 'none' : 'inline-block';
 
-      // Calculate context entries for the big number
       let contextEntries = ledger.filter(e => e.tripId === activeTripId && e.type === activeType);
       if (currentViewType === 'monthly') {
         const selMonth = document.getElementById('monthPicker').value;
@@ -627,8 +761,10 @@
         balanceLabel.innerText = `${viewStr} ${getT('lblIncome')}`; balanceText.style.color = 'var(--income)';
       } else if (activeType === 'expense') {
         balanceLabel.innerText = `${viewStr} ${getT('lblExpense')}`; balanceText.style.color = 'var(--expense)';
-      } else {
+      } else if (activeType === 'pending') {
         balanceLabel.innerText = `${viewStr} ${getT('lblPending')}`; balanceText.style.color = 'var(--pending)';
+      } else {
+        balanceLabel.innerText = `${viewStr} ${getT('lblPlanned')}`; balanceText.style.color = 'var(--planned)';
       }
     }
 
@@ -652,6 +788,7 @@
       let totalColor = 'var(--income)';
       if(activeType === 'expense') totalColor = 'var(--expense)';
       if(activeType === 'pending') totalColor = 'var(--pending)';
+      if(activeType === 'planned') totalColor = 'var(--planned)';
       
       let html = `
       <div class="txn-header" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
@@ -666,18 +803,24 @@
         displayEntries.forEach(entry => {
           const isInc = entry.type === 'income';
           const isPending = entry.type === 'pending';
+          const isPlanned = entry.type === 'planned';
           
           let rowClass = 'red-glow'; let amtColor = 'color-red'; let sign = '-';
           if(isInc) { rowClass = 'green-glow'; amtColor = 'color-green'; sign = '+'; }
           if(isPending) { rowClass = 'yellow-glow'; amtColor = 'color-yellow'; sign = '⏳'; }
+          if(isPlanned) { rowClass = 'cyan-glow'; amtColor = 'color-cyan'; sign = '🗓️'; }
           
           const dateStr = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const icon = categoryIcons[entry.category] || "🔹";
           const detailsHtml = entry.details ? `<span class="txn-subtext">• ${entry.details}</span>` : '';
+          const recHtml = entry.isRecurring ? `<span class="txn-subtext" style="color:var(--planned);">🔄</span>` : '';
           
           let actionButtons = '';
           if(isPending) {
              actionButtons += `<button class="action-btn-text" onclick="markAsPaid(${entry.id})">💰 ${getT('btnMarkPaid')}</button>`;
+          }
+          if(isPlanned) {
+             actionButtons += `<button class="action-btn-text cyan" onclick="payPlanned(${entry.id})">💳 ${getT('btnPayNow')}</button>`;
           }
           actionButtons += `<button class="action-icon" onclick="editTransaction(${entry.id})">✎</button><button class="action-icon" onclick="deleteTransaction(${entry.id})">✕</button>`;
 
@@ -686,7 +829,7 @@
             <div class="txn-left" onclick="showDetailsModal(${entry.id})" title="View Details">
               <div class="txn-icon">${icon}</div>
               <div class="txn-details">
-                <div class="txn-name">${getCatT(entry.category)}${detailsHtml}</div>
+                <div class="txn-name">${getCatT(entry.category)}${recHtml}${detailsHtml}</div>
                 <div class="txn-time">${dateStr}</div>
               </div>
             </div>
@@ -716,7 +859,12 @@
       renderTable(monthlyEntries, `${monthName} ${getT('txtReport')}`);
     }
     
-    function refreshView() { updateHeaderBalance(); currentViewType === 'all' ? showTotal() : showMonthly(); }
+    function refreshView() { 
+      updateHeaderBalance(); 
+      checkPlannedAlerts(); // Triggers the pulse engine
+      currentViewType === 'all' ? showTotal() : showMonthly(); 
+    }
+    
     function showToast(msg) {
       const toast = document.createElement('div'); toast.textContent = msg;
       Object.assign(toast.style, { position: 'fixed', bottom: '40px', left: '50%', transform: 'translateX(-50%)', background: 'white', color: 'black', padding: '14px 28px', borderRadius: '100px', zIndex: '1000', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', transition: 'opacity 0.3s', fontSize: '15px', fontWeight: '700' });
