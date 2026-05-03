@@ -78,7 +78,6 @@
     .input-group select, .input-group input { background: transparent; border: none; color: white; font-size: 16px; font-weight: 600; width: 100%; appearance: none; padding: 0;}
     .input-group select option { background: #111; color: white; }
     .input-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-    
     .input-group input[type="checkbox"] { appearance: auto; width: 22px; height: 22px; cursor: pointer; accent-color: var(--planned); }
 
     .details-input { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 14px 15px; font-size: 15px; color: white; width: 100%; font-weight: 500; }
@@ -611,7 +610,6 @@
       alertsContainer.innerHTML = '';
       alertsContainer.style.display = 'none'; 
 
-      // NEW: Only run the pulse alert logic if the user is on the Income or Expense tab
       const activeType = document.querySelector('input[name="txnType"]:checked').value;
       if (activeType !== 'income' && activeType !== 'expense') return;
 
@@ -849,7 +847,11 @@
       document.getElementById('monthPicker').value = ''; refreshView(); 
     }
 
-    function triggerMonthlyView() { currentViewType = document.getElementById('monthPicker').value ? 'monthly' : 'all'; refreshView(); }
+    function triggerMonthlyView() { 
+      currentViewType = document.getElementById('monthPicker').value ? 'monthly' : 'all'; 
+      refreshView(); 
+    }
+    
     function showTotal() { renderTable(ledger, getT('txtAllTime')); }
     function showMonthly() {
       const selMonth = document.getElementById('monthPicker').value; if (!selMonth) return;
@@ -871,7 +873,13 @@
       document.body.appendChild(toast); setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
     }
 
-    applyLanguageUI(); initFolders(); triggerTotalView();
+    // --- INITIALIZATION ---
+    applyLanguageUI(); 
+    initFolders(); 
+    
+    // CHANGED: Instead of triggering 'Total' on load, we trigger 'Monthly' 
+    // to default the view to the current month already placed in the month picker.
+    triggerMonthlyView(); 
   </script>
 </body>
 </html>
